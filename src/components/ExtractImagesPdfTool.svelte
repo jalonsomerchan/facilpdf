@@ -8,9 +8,11 @@
   import { formatFileSize, getFriendlyPdfError, getPdfBaseFilename, yieldToBrowser } from '../lib/pdfToolUtils';
 
   type Lang = 'es' | 'en';
-  type ImageFormat = 'png' | 'jpg';
+  type ImageFormat = 'png' | 'jpg' | 'webp';
 
   export let lang: Lang = 'es';
+  export let defaultFormat: ImageFormat = 'png';
+  export let lockedFormat: ImageFormat | null = null;
 
   GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
@@ -31,7 +33,7 @@
       pages: 'Páginas a exportar',
       pagesHelp: 'Ejemplo: 1, 3-5. Déjalo vacío para exportar todas las páginas.',
       format: 'Formato',
-      quality: 'Calidad JPG',
+      quality: 'Calidad de imagen',
       scale: 'Resolución',
       generate: 'Exportar imágenes',
       generating: 'Exportando imágenes…',
@@ -60,7 +62,7 @@
       pages: 'Pages to export',
       pagesHelp: 'Example: 1, 3-5. Leave empty to export all pages.',
       format: 'Format',
-      quality: 'JPG quality',
+      quality: 'Image quality',
       scale: 'Resolution',
       generate: 'Export images',
       generating: 'Exporting images…',
@@ -79,7 +81,7 @@
   let pdfDocument: PDFDocumentProxy | null = null;
   let pageCount = 0;
   let pageRange = '';
-  let format: ImageFormat = 'png';
+  let format: ImageFormat = lockedFormat ?? defaultFormat;
   let quality = 0.9;
   let scale = 1.6;
   let isGenerating = false;
@@ -170,8 +172,8 @@
         await task.promise;
         page.cleanup();
 
-        const mime = format === 'png' ? 'image/png' : 'image/jpeg';
-        const blob = await canvasToBlob(canvas, mime, format === 'jpg' ? quality : undefined);
+        const mime = format === 'png' ? 'image/png' : format === 'webp' ? 'image/webp' : 'image/jpeg';
+        const blob = await canvasToBlob(canvas, mime, format === 'png' ? undefined : quality);
         generated.push({ name: `${baseName}-pagina-${String(pageNumber).padStart(3, '0')}.${format}`, blob });
         progress = Math.round(((index + 1) / pages.length) * 100);
         await yieldToBrowser();
@@ -274,20 +276,28 @@
           <small>{t.pagesHelp}</small>
         </label>
 
-        <label>
-          <span>{t.format}</span>
-          <select bind:value={format}>
-            <option value="png">PNG</option>
-            <option value="jpg">JPG</option>
-          </select>
-        </label>
+        {#if lockedFormat}
+          <div class="locked-option" aria-label={`${t.format}: ${lockedFormat.toUpperCase()}`}>
+            <span>{t.format}</span>
+            <strong>{lockedFormat.toUpperCase()}</strong>
+          </div>
+        {:else}
+          <label>
+            <span>{t.format}</span>
+            <select bind:value={format}>
+              <option value="png">PNG</option>
+              <option value="jpg">JPG</option>
+              <option value="webp">WebP</option>
+            </select>
+          </label>
+        {/if}
 
         <label>
           <span>{t.scale}: {scale.toFixed(1)}x</span>
           <input bind:value={scale} type="range" min="1" max="3" step="0.2" />
         </label>
 
-        {#if format === 'jpg'}
+        {#if format !== 'png'}
           <label>
             <span>{t.quality}: {Math.round(quality * 100)}%</span>
             <input bind:value={quality} type="range" min="0.45" max="1" step="0.05" />
@@ -312,7 +322,7 @@
 </section>
 
 <style>
-  .extract-images-tool{display:grid;gap:22px;margin:34px 0 56px;padding:clamp(18px,3vw,30px);border:1px solid #e2e8f0;border-radius:32px;background:linear-gradient(135deg,#fff,#f8fafc);box-shadow:0 30px 90px rgba(15,23,42,.11)}
+  .extract-images-tool{display:grid;gap:22px;margin:34px 0 56px;padding:clamp(18px,3vw,30px);border:1px solid var(--color-border,#e2e8f0);border-radius:32px;background:linear-gradient(135deg,var(--color-surface,#fff),var(--color-surface-soft,#f8fafc));box-shadow:var(--shadow-md,0 30px 90px rgba(15,23,42,.11))}
   .tool-head{display:flex;align-items:center;justify-content:space-between;gap:18px}.tool-head h2{margin:0;font-size:clamp(1.6rem,3vw,2.3rem);letter-spacing:-.04em}.tool-head p{margin:.45rem 0 0;color:#64748b}.tool-head span{display:inline-flex;margin-bottom:8px;padding:5px 10px;border-radius:999px;background:#dcfce7;color:#166534;font-size:.78rem;font-weight:950}.tool-head>strong{display:grid;width:96px;height:96px;place-items:center;border-radius:24px;background:#f0fdf4;font-size:2.8rem;box-shadow:0 20px 48px rgba(15,23,42,.12);transform:rotate(-4deg)}
-  .warning{margin:0;padding:14px 16px;border:1px solid #bbf7d0;border-radius:18px;background:#f0fdf4;color:#166534;font-weight:850}.message{margin:0;padding:13px 15px;border-radius:16px;font-weight:850}.message.error{background:#fff1f2;color:#991b1b}.message.success{background:#ecfdf5;color:#166534}.panel{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start}.panel aside,.options{border:1px solid #e2e8f0;border-radius:24px;background:#fff;box-shadow:0 18px 48px rgba(15,23,42,.07)}.panel aside{display:grid;gap:12px;padding:18px}.panel aside strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.panel span,label span{color:#475569;font-size:.86rem;font-weight:900}.panel small{color:#64748b}.options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:18px}.options label{display:grid;gap:8px}.options label:first-child{grid-column:1/-1}.options input,.options select{width:100%;box-sizing:border-box;min-height:48px;border:1px solid #cbd5e1;border-radius:16px;background:#fff;color:#0f172a;font:inherit;font-weight:750}.options input[type='text'],.options select{padding:12px 14px}.options input[type='range']{accent-color:#16a34a}.options progress{grid-column:1/-1;width:100%;height:14px}.panel button,.actions a{display:grid;min-height:46px;place-items:center;border:0;border-radius:999px;text-decoration:none;cursor:pointer;font:inherit;font-weight:950}.panel button:disabled,.actions a.disabled{pointer-events:none;cursor:not-allowed;opacity:.45}.panel aside button{background:#e2e8f0;color:#0f172a}.primary{background:linear-gradient(135deg,#22c55e,#15803d);color:#fff}.actions a{background:#e2e8f0;color:#0f172a}.actions{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:12px}.result{grid-column:1/-1;margin:0;padding:14px 16px;border-radius:18px;background:#f8fafc;color:#475569}@media (max-width:850px){.tool-head,.panel{display:grid;grid-template-columns:1fr}.tool-head>strong{width:82px;height:82px}.options,.actions{grid-template-columns:1fr}}
+  .warning{margin:0;padding:14px 16px;border:1px solid color-mix(in srgb,var(--color-success,#16a34a) 35%,var(--color-border));border-radius:18px;background:var(--color-success-soft,#f0fdf4);color:var(--color-success,#166534);font-weight:850}.message{margin:0;padding:13px 15px;border-radius:16px;font-weight:850}.message.error{background:var(--color-danger-soft,#fff1f2);color:var(--color-danger,#991b1b)}.message.success{background:var(--color-success-soft,#ecfdf5);color:var(--color-success,#166534)}.panel{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start}.panel aside,.options{border:1px solid var(--color-border,#e2e8f0);border-radius:24px;background:var(--color-surface,#fff);box-shadow:var(--shadow-sm,0 18px 48px rgba(15,23,42,.07))}.panel aside{display:grid;gap:12px;padding:18px}.panel aside strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.panel span,label span,.locked-option span{color:var(--color-text-muted,#475569);font-size:.86rem;font-weight:900}.panel small{color:var(--color-text-soft,#64748b)}.options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;padding:18px}.options label,.locked-option{display:grid;gap:8px}.options label:first-child{grid-column:1/-1}.locked-option strong{display:flex;min-height:48px;align-items:center;padding:0 14px;border:1px solid var(--color-border);border-radius:16px;background:var(--color-surface-soft);color:var(--color-text)}.options input,.options select{width:100%;box-sizing:border-box;min-height:48px;border:1px solid var(--color-border-strong,#cbd5e1);border-radius:16px;background:var(--color-surface,#fff);color:var(--color-text,#0f172a);font:inherit;font-weight:750}.options input[type='text'],.options select{padding:12px 14px}.options input[type='range']{accent-color:var(--color-success,#16a34a)}.options progress{grid-column:1/-1;width:100%;height:14px}.panel button,.actions a{display:grid;min-height:46px;place-items:center;border:0;border-radius:999px;text-decoration:none;cursor:pointer;font:inherit;font-weight:950}.panel button:disabled,.actions a.disabled{pointer-events:none;cursor:not-allowed;opacity:.45}.panel aside button,.actions a{background:var(--color-surface-soft,#e2e8f0);color:var(--color-text,#0f172a)}.primary{background:linear-gradient(135deg,#22c55e,#15803d);color:#fff}.actions{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:12px}.result{grid-column:1/-1;margin:0;padding:14px 16px;border-radius:18px;background:var(--color-surface-soft,#f8fafc);color:var(--color-text-muted,#475569)}@media (max-width:850px){.tool-head,.panel{display:grid;grid-template-columns:1fr}.tool-head>strong{width:82px;height:82px}.options,.actions{grid-template-columns:1fr}}
 </style>

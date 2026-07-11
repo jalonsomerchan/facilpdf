@@ -20,26 +20,38 @@ export const PDF_TOOL_ERROR_MESSAGES = {
   es: {
     invalidType: 'Solo se admiten archivos PDF válidos.',
     emptyFile: 'El archivo está vacío y no se puede procesar.',
-    fileTooLarge: (size: string, limit: string) => `El archivo pesa ${size}. El límite recomendado para esta herramienta es ${limit}.`,
-    tooManyFiles: (limit: number) => `Has seleccionado demasiados archivos. El límite recomendado es ${limit}.`,
-    totalTooLarge: (size: string, limit: string) => `El conjunto de archivos pesa ${size}. Reduce la selección por debajo de ${limit}.`,
+    fileTooLarge: (size: string, limit: string) =>
+      `El archivo pesa ${size}. El límite recomendado para esta herramienta es ${limit}.`,
+    tooManyFiles: (limit: number) =>
+      `Has seleccionado demasiados archivos. El límite recomendado es ${limit}.`,
+    totalTooLarge: (size: string, limit: string) =>
+      `El conjunto de archivos pesa ${size}. Reduce la selección por debajo de ${limit}.`,
     password: 'El PDF está protegido con contraseña o no permite esta operación en navegador.',
     damaged: 'El PDF parece estar dañado o no tiene un formato válido.',
-    memory: 'El navegador no tiene memoria suficiente para completar la operación. Prueba con un PDF más pequeño o divide el trabajo en varios pasos.',
-    unsupported: 'Tu navegador no permite completar esta operación. Actualízalo o prueba con otro navegador moderno.',
-    unknown: 'No se pudo completar la operación. Revisa que el PDF no esté dañado, protegido o sea demasiado grande.',
+    memory:
+      'El navegador no tiene memoria suficiente para completar la operación. Prueba con un PDF más pequeño o divide el trabajo en varios pasos.',
+    unsupported:
+      'Tu navegador no permite completar esta operación. Actualízalo o prueba con otro navegador moderno.',
+    unknown:
+      'No se pudo completar la operación. Revisa que el PDF no esté dañado, protegido o sea demasiado grande.',
   },
   en: {
     invalidType: 'Only valid PDF files are supported.',
     emptyFile: 'The file is empty and cannot be processed.',
-    fileTooLarge: (size: string, limit: string) => `The file is ${size}. The recommended limit for this tool is ${limit}.`,
-    tooManyFiles: (limit: number) => `You selected too many files. The recommended limit is ${limit}.`,
-    totalTooLarge: (size: string, limit: string) => `The selected files are ${size}. Reduce the selection below ${limit}.`,
+    fileTooLarge: (size: string, limit: string) =>
+      `The file is ${size}. The recommended limit for this tool is ${limit}.`,
+    tooManyFiles: (limit: number) =>
+      `You selected too many files. The recommended limit is ${limit}.`,
+    totalTooLarge: (size: string, limit: string) =>
+      `The selected files are ${size}. Reduce the selection below ${limit}.`,
     password: 'The PDF is password-protected or does not allow this browser operation.',
     damaged: 'The PDF seems to be damaged or is not a valid PDF file.',
-    memory: 'The browser does not have enough memory to complete the operation. Try a smaller PDF or split the work in several steps.',
-    unsupported: 'Your browser cannot complete this operation. Update it or try another modern browser.',
-    unknown: 'The operation could not be completed. Check that the PDF is not damaged, protected or too large.',
+    memory:
+      'The browser does not have enough memory to complete the operation. Try a smaller PDF or split the work in several steps.',
+    unsupported:
+      'Your browser cannot complete this operation. Update it or try another modern browser.',
+    unknown:
+      'The operation could not be completed. Check that the PDF is not damaged, protected or too large.',
   },
 } as const;
 
@@ -75,7 +87,9 @@ export function validatePdfFiles(
   }
 
   if (totalSize > limits.maxTotalSize) {
-    errors.add(messages.totalTooLarge(formatFileSize(totalSize), formatFileSize(limits.maxTotalSize)));
+    errors.add(
+      messages.totalTooLarge(formatFileSize(totalSize), formatFileSize(limits.maxTotalSize)),
+    );
   }
 
   const validFiles = files.filter((file) => {
@@ -92,7 +106,9 @@ export function validatePdfFiles(
     }
 
     if (file.size > limits.maxFileSize) {
-      errors.add(messages.fileTooLarge(formatFileSize(file.size), formatFileSize(limits.maxFileSize)));
+      errors.add(
+        messages.fileTooLarge(formatFileSize(file.size), formatFileSize(limits.maxFileSize)),
+      );
       return false;
     }
 
@@ -108,12 +124,18 @@ export function validatePdfFiles(
 
 export function yieldToBrowser() {
   return new Promise<void>((resolve) => {
-    window.requestIdleCallback?.(() => resolve(), { timeout: 120 }) ?? window.setTimeout(resolve, 0);
+    window.requestIdleCallback?.(() => resolve(), { timeout: 120 }) ??
+      window.setTimeout(resolve, 0);
   });
 }
 
 export function createPdfObjectUrl(bytes: Uint8Array | ArrayBuffer | Blob) {
-  const blob = bytes instanceof Blob ? bytes : new Blob([bytes], { type: 'application/pdf' });
+  const blob =
+    bytes instanceof Blob
+      ? bytes
+      : new Blob([bytes instanceof Uint8Array ? (bytes.slice().buffer as ArrayBuffer) : bytes], {
+          type: 'application/pdf',
+        });
   return URL.createObjectURL(blob);
 }
 
@@ -134,12 +156,17 @@ export function getPdfBaseFilename(file: File | null, fallback = 'documento') {
   return file.name.replace(/\.pdf$/i, '').trim() || fallback;
 }
 
-export function getFriendlyPdfError(error: unknown, fallback = PDF_TOOL_ERROR_MESSAGES.es.unknown, lang: PdfToolLang = 'es') {
+export function getFriendlyPdfError(
+  error: unknown,
+  fallback: string = PDF_TOOL_ERROR_MESSAGES.es.unknown,
+  lang: PdfToolLang = 'es',
+) {
   const messages = PDF_TOOL_ERROR_MESSAGES[lang] ?? PDF_TOOL_ERROR_MESSAGES.es;
 
   if (error instanceof DOMException) {
     if (/quota|memory|allocation/i.test(`${error.name} ${error.message}`)) return messages.memory;
-    if (/notallowed|security|unsupported/i.test(`${error.name} ${error.message}`)) return messages.unsupported;
+    if (/notallowed|security|unsupported/i.test(`${error.name} ${error.message}`))
+      return messages.unsupported;
   }
 
   if (error instanceof Error) {

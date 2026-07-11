@@ -25,8 +25,8 @@ interface Props {
   badge: string;
   h1: string;
   lead: string;
-  steps?: StepItem[];
-  infoBlocks?: InfoBlock[];
+  steps?: readonly StepItem[];
+  infoBlocks?: readonly InfoBlock[];
   footer?: string;
 }
 
@@ -49,7 +49,11 @@ const tool = toolId ? getToolById(toolId) : undefined;
 const categoryId = category ?? tool?.category;
 const toolCategory = categoryId ? getCategoryById(categoryId) : undefined;
 const relatedTools = categoryId
-  ? pdfTools.filter((item) => item.status === 'available' && item.id !== toolId && item.category === categoryId).slice(0, 4)
+  ? pdfTools
+      .filter(
+        (item) => item.status === 'available' && item.id !== toolId && item.category === categoryId,
+      )
+      .slice(0, 4)
   : [];
 
 const labels = {
@@ -59,7 +63,8 @@ const labels = {
     useTool: 'Usar herramienta',
     how: 'Cómo usar la herramienta',
     trust: 'Privado, rápido y sin instalación',
-    trustText: 'FácilPDF prioriza herramientas que funcionan en tu navegador. Siempre que la operación lo permite, tus archivos no se suben a servidores externos.',
+    trustText:
+      'FácilPDF prioriza herramientas que funcionan en tu navegador. Siempre que la operación lo permite, tus archivos no se suben a servidores externos.',
     related: 'Herramientas relacionadas',
     open: 'Abrir herramienta',
   },
@@ -69,23 +74,177 @@ const labels = {
     useTool: 'Use tool',
     how: 'How to use this tool',
     trust: 'Private, fast and no installation',
-    trustText: 'FácilPDF prioritizes tools that run in your browser. Whenever the operation allows it, your files are not uploaded to external servers.',
+    trustText:
+      'FácilPDF prioritizes tools that run in your browser. Whenever the operation allows it, your files are not uploaded to external servers.',
     related: 'Related tools',
     open: 'Open tool',
   },
 } as const;
 
 const pageLabels = labels[lang];
+const currentUrl = new URL(getLocalizedPath(lang, path), Astro.site).toString();
+const homeUrl = new URL(getLocalizedPath(lang), Astro.site).toString();
+const categoryUrl = toolCategory
+  ? new URL(getLocalizedPath(lang, `categoria/${toolCategory.id}`), Astro.site).toString()
+  : homeUrl;
+const pageStructuredData: Record<string, unknown>[] = [
+  tool?.status === 'guide'
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: h1,
+        url: currentUrl,
+        description,
+        inLanguage: lang,
+      }
+    : {
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: tool?.title[lang] ?? h1,
+        url: currentUrl,
+        description,
+        applicationCategory: 'UtilitiesApplication',
+        operatingSystem: 'Any',
+        browserRequirements: 'Requires a modern browser with JavaScript enabled',
+        isAccessibleForFree: true,
+        inLanguage: lang,
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
+        featureList: steps.map((step) => step.text),
+      },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: pageLabels.home, item: homeUrl },
+      ...(toolCategory
+        ? [{ '@type': 'ListItem', position: 2, name: toolCategory.title[lang], item: categoryUrl }]
+        : []),
+      { '@type': 'ListItem', position: toolCategory ? 3 : 2, name: h1, item: currentUrl },
+    ],
+  },
+];
+
+if (steps.length > 0) {
+  pageStructuredData.push({
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: `${pageLabels.how}: ${h1}`,
+    description: lead,
+    step: steps.map((step, index) => ({
+      '@type': 'HowToStep',
+      position: index + 1,
+      name: step.title ?? `${index + 1}`,
+      text: step.text,
+      url: `${currentUrl}#tool-page-steps-title`,
+    })),
+  });
+}
+
+const faq =
+  tool?.status === 'guide'
+    ? lang === 'es'
+      ? [
+          {
+            question: '¿Esta página modifica el PDF?',
+            answer: 'No. Es una guía técnica y no pide ni procesa ningún documento.',
+          },
+          {
+            question: '¿Por qué no hay una herramienta activa?',
+            answer:
+              'FácilPDF no ofrece esta operación hasta poder garantizar un resultado local, seguro y compatible con lectores PDF habituales.',
+          },
+          {
+            question: '¿Qué alternativa puedo usar?',
+            answer:
+              'Para documentos sensibles, utiliza una aplicación de escritorio fiable y conserva una copia del archivo original.',
+          },
+        ]
+      : [
+          {
+            question: 'Does this page modify the PDF?',
+            answer:
+              'No. This is a technical guide and it does not request or process any document.',
+          },
+          {
+            question: 'Why is there no active tool?',
+            answer:
+              'FácilPDF does not offer this operation until it can guarantee a local, secure result compatible with common PDF readers.',
+          },
+          {
+            question: 'What alternative can I use?',
+            answer:
+              'For sensitive documents, use a trusted desktop application and keep a copy of the original file.',
+          },
+        ]
+    : lang === 'es'
+      ? [
+          {
+            question: '¿Mis archivos se suben a un servidor?',
+            answer:
+              'No en esta herramienta. El PDF se procesa en el navegador y FácilPDF no recibe el documento.',
+          },
+          {
+            question: '¿Funciona en móvil y en ordenador?',
+            answer:
+              'Sí. Puedes usarla en navegadores modernos de móvil, tablet y escritorio. Los archivos muy grandes dependen de la memoria disponible en el dispositivo.',
+          },
+          {
+            question: '¿Qué ocurre con el archivo al terminar?',
+            answer:
+              'La copia generada existe temporalmente en la pestaña. Solo se guarda en tu dispositivo si eliges descargarla.',
+          },
+        ]
+      : [
+          {
+            question: 'Are my files uploaded to a server?',
+            answer:
+              'No for this tool. The PDF is processed in your browser and FácilPDF does not receive the document.',
+          },
+          {
+            question: 'Does it work on mobile and desktop?',
+            answer:
+              'Yes. You can use it in modern mobile, tablet and desktop browsers. Very large files depend on the memory available on the device.',
+          },
+          {
+            question: 'What happens to the file when I finish?',
+            answer:
+              'The generated copy exists temporarily in the tab. It is only saved to your device if you choose to download it.',
+          },
+        ];
+
+pageStructuredData.push({
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faq.map((item) => ({
+    '@type': 'Question',
+    name: item.question,
+    acceptedAnswer: { '@type': 'Answer', text: item.answer },
+  })),
+});
 ---
 
-<BaseLayout lang={lang} title={title} description={description} path={path}>
+<BaseLayout
+  lang={lang}
+  title={title}
+  description={description}
+  path={path}
+  structuredData={pageStructuredData}
+>
   <article class="tool-page">
     <nav class="tool-page__breadcrumbs" aria-label="Breadcrumb">
       <a href={getLocalizedPath(lang)}>{pageLabels.home}</a>
       <span aria-hidden="true">/</span>
       <a href={getLocalizedPath(lang)}>{pageLabels.tools}</a>
       {toolCategory && <span aria-hidden="true">/</span>}
-      {toolCategory && <a href={getLocalizedPath(lang, `categoria/${toolCategory.id}`)}>{toolCategory.title[lang]}</a>}
+      {
+        toolCategory && (
+          <a href={getLocalizedPath(lang, `categoria/${toolCategory.id}`)}>
+            {toolCategory.title[lang]}
+          </a>
+        )
+      }
+      <span aria-hidden="true">/</span>
+      <span aria-current="page">{tool?.title[lang] ?? h1}</span>
     </nav>
 
     <header class="tool-page__hero">
@@ -106,24 +265,32 @@ const pageLabels = labels[lang];
       <slot />
     </section>
 
-    {steps.length > 0 && (
-      <section class="tool-page__section tool-page__section--steps" aria-labelledby="tool-page-steps-title">
-        <div class="tool-page__section-head">
-          <span aria-hidden="true">⚙️</span>
-          <h2 id="tool-page-steps-title">{pageLabels.how}</h2>
-        </div>
-        <ol class="tool-page__steps">
-          {steps.map((step) => (
-            <li>
-              {step.title && <strong>{step.title}</strong>}
-              <span>{step.text}</span>
-            </li>
-          ))}
-        </ol>
-      </section>
-    )}
+    {
+      steps.length > 0 && (
+        <section
+          class="tool-page__section tool-page__section--steps"
+          aria-labelledby="tool-page-steps-title"
+        >
+          <div class="tool-page__section-head">
+            <span aria-hidden="true">⚙️</span>
+            <h2 id="tool-page-steps-title">{pageLabels.how}</h2>
+          </div>
+          <ol class="tool-page__steps">
+            {steps.map((step) => (
+              <li>
+                {step.title && <strong>{step.title}</strong>}
+                <span>{step.text}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )
+    }
 
-    <section class="tool-page__section tool-page__section--trust" aria-labelledby="tool-page-trust-title">
+    <section
+      class="tool-page__section tool-page__section--trust"
+      aria-labelledby="tool-page-trust-title"
+    >
       <div class="tool-page__section-head">
         <span aria-hidden="true">🔒</span>
         <h2 id="tool-page-trust-title">{pageLabels.trust}</h2>
@@ -132,41 +299,333 @@ const pageLabels = labels[lang];
       <TrustBadges lang={lang} compact />
     </section>
 
-    {infoBlocks.length > 0 && (
-      <section class="tool-page__info-grid" aria-label={lang === 'es' ? 'Información de la herramienta' : 'Tool information'}>
-        {infoBlocks.map((block) => (
-          <article>
-            <h2>{block.title}</h2>
-            <p>{block.text}</p>
-          </article>
-        ))}
-      </section>
-    )}
+    {
+      infoBlocks.length > 0 && (
+        <section
+          class="tool-page__info-grid"
+          aria-label={lang === 'es' ? 'Información de la herramienta' : 'Tool information'}
+        >
+          {infoBlocks.map((block) => (
+            <article>
+              <h2>{block.title}</h2>
+              <p>{block.text}</p>
+            </article>
+          ))}
+        </section>
+      )
+    }
 
     <slot name="extra" />
 
-    {relatedTools.length > 0 && (
-      <section class="tool-page__section tool-page__section--related" aria-labelledby="tool-page-related-title">
-        <div class="tool-page__section-head">
-          <span aria-hidden="true">🧰</span>
-          <h2 id="tool-page-related-title">{pageLabels.related}</h2>
-        </div>
-        <div class="tool-page__related-grid">
-          {relatedTools.map((related) => (
-            <a href={getLocalizedPath(lang, related.route)}>
-              <ToolIcon name={related.id} />
-              <strong>{related.title[lang]}</strong>
-              <span>{pageLabels.open}</span>
-            </a>
-          ))}
-        </div>
-      </section>
-    )}
+    <section
+      class="tool-page__section tool-page__section--faq"
+      aria-labelledby="tool-page-faq-title"
+    >
+      <div class="tool-page__section-head">
+        <span aria-hidden="true">?</span>
+        <h2 id="tool-page-faq-title">
+          {lang === 'es' ? 'Preguntas frecuentes' : 'Frequently asked questions'}
+        </h2>
+      </div>
+      <div class="tool-page__faq-list">
+        {
+          faq.map((item) => (
+            <details>
+              <summary>{item.question}</summary>
+              <p>{item.answer}</p>
+            </details>
+          ))
+        }
+      </div>
+    </section>
+
+    {
+      relatedTools.length > 0 && (
+        <section
+          class="tool-page__section tool-page__section--related"
+          aria-labelledby="tool-page-related-title"
+        >
+          <div class="tool-page__section-head">
+            <span aria-hidden="true">🧰</span>
+            <h2 id="tool-page-related-title">{pageLabels.related}</h2>
+          </div>
+          <div class="tool-page__related-grid">
+            {relatedTools.map((related) => (
+              <a href={getLocalizedPath(lang, related.route)}>
+                <ToolIcon name={related.id} />
+                <strong>{related.title[lang]}</strong>
+                <span>{pageLabels.open}</span>
+              </a>
+            ))}
+          </div>
+        </section>
+      )
+    }
   </article>
 
   <Fragment slot="footer">{footer}</Fragment>
 </BaseLayout>
 
 <style>
-  .tool-page{display:grid;gap:clamp(1.2rem,3vw,2rem);width:min(var(--container-xl,1180px),100%);margin:0 auto clamp(2.5rem,6vw,4.5rem)}.tool-page__breadcrumbs{display:flex;flex-wrap:wrap;gap:.45rem;align-items:center;margin-top:clamp(1rem,2vw,1.5rem);color:var(--color-text-muted,#64748b);font-size:.9rem;font-weight:800}.tool-page__breadcrumbs a{color:inherit;text-decoration:none}.tool-page__breadcrumbs a:hover{color:var(--color-primary,#2563eb)}.tool-page__hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:clamp(1.2rem,4vw,2.5rem);align-items:center;padding:clamp(1.4rem,4vw,3rem);border:1px solid var(--color-border,#e2e8f0);border-radius:var(--radius-2xl,1.5rem);background:radial-gradient(circle at 12% 10%,color-mix(in srgb,var(--color-primary,#2563eb) 15%,transparent),transparent 20rem),linear-gradient(135deg,var(--color-surface-raised,#fff),var(--color-surface-soft,#f8fafc));box-shadow:var(--shadow-md,0 18px 48px rgb(15 23 42 / .12))}.tool-page__hero-copy{display:grid;gap:.9rem}.tool-page__badge{width:fit-content;padding:.4rem .75rem;border-radius:999px;background:var(--color-primary-soft,#dbeafe);color:var(--color-primary,#2563eb);font-size:.8rem;font-weight:950;letter-spacing:.06em;text-transform:uppercase}.tool-page__hero h1{max-width:16ch;margin:0;color:var(--color-text,#0f172a);font-size:clamp(2.2rem,7vw,5.4rem);line-height:.92;letter-spacing:-.075em}.tool-page__hero p{max-width:58rem;margin:0;color:var(--color-text-muted,#475569);font-size:clamp(1.02rem,2vw,1.26rem)}.tool-page__hero-visual{display:grid;width:clamp(8rem,18vw,14rem);aspect-ratio:1;place-items:center;padding:1rem;border:1px solid var(--color-border,#e2e8f0);border-radius:2rem;background:var(--color-surface,#fff);box-shadow:var(--shadow-lg,0 24px 70px rgb(15 23 42 / .16));color:var(--color-primary,#2563eb);text-align:center;transform:rotate(3deg)}.tool-page__hero-visual .tool-icon{font-size:2.2rem}.tool-page__hero-visual strong{color:var(--color-text,#0f172a);font-size:clamp(1rem,2vw,1.25rem);line-height:1.05}.tool-page__hero-visual small{color:var(--color-text-muted,#64748b);font-weight:850;text-transform:uppercase;letter-spacing:.08em}.tool-page__app{display:grid}.tool-page__section,.tool-page__info-grid article{padding:clamp(1.1rem,3vw,1.8rem);border:1px solid var(--color-border,#e2e8f0);border-radius:var(--radius-xl,1.25rem);background:var(--color-surface,#fff);box-shadow:var(--shadow-sm,0 10px 28px rgb(15 23 42 / .08))}.tool-page__section-head{display:flex;gap:.75rem;align-items:center;margin-bottom:.9rem}.tool-page__section-head>span{display:grid;width:2.6rem;height:2.6rem;place-items:center;border-radius:.9rem;background:var(--color-surface-soft,#f8fafc)}.tool-page__section h2,.tool-page__info-grid h2{margin:0;color:var(--color-text,#0f172a);letter-spacing:-.035em}.tool-page__section p,.tool-page__info-grid p{margin:.35rem 0 0;color:var(--color-text-muted,#64748b)}.tool-page__steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;margin:0;padding:0;list-style:none;counter-reset:steps}.tool-page__steps li{display:grid;gap:.35rem;padding:1rem;border-radius:1rem;background:var(--color-surface-soft,#f8fafc);counter-increment:steps}.tool-page__steps li::before{content:counter(steps);display:grid;width:2rem;height:2rem;place-items:center;border-radius:999px;background:linear-gradient(135deg,var(--color-primary,#2563eb),var(--color-secondary,#7c3aed));color:#fff;font-weight:950}.tool-page__steps strong{color:var(--color-text,#0f172a)}.tool-page__steps span{color:var(--color-text-muted,#64748b)}.tool-page__section--trust{background:linear-gradient(135deg,color-mix(in srgb,var(--color-success,#22c55e) 10%,var(--color-surface,#fff)),var(--color-surface,#fff))}.tool-page__section--trust .trust-badges{margin-top:1rem}.tool-page__info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem}.tool-page__related-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.85rem}.tool-page__related-grid a{display:grid;gap:.45rem;padding:1rem;border:1px solid var(--color-border,#e2e8f0);border-radius:1rem;background:var(--color-surface-soft,#f8fafc);color:var(--color-text,#0f172a);text-decoration:none;transition:transform var(--transition-base,180ms ease),border-color var(--transition-base,180ms ease)}.tool-page__related-grid a:hover{transform:translateY(-2px);border-color:var(--color-primary,#2563eb)}.tool-page__related-grid span{color:var(--color-primary,#2563eb);font-size:.86rem;font-weight:900}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}@media(max-width:860px){.tool-page__hero,.tool-page__steps,.tool-page__info-grid,.tool-page__related-grid{grid-template-columns:1fr}.tool-page__hero-visual{width:min(100%,12rem);justify-self:start}.tool-page__hero h1{max-width:none}}
+  .tool-page {
+    display: grid;
+    gap: clamp(1.2rem, 3vw, 2rem);
+    width: min(var(--container-xl, 1180px), 100%);
+    margin: 0 auto clamp(2.5rem, 6vw, 4.5rem);
+  }
+  .tool-page__breadcrumbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    align-items: center;
+    margin-top: clamp(1rem, 2vw, 1.5rem);
+    color: var(--color-text-muted, #64748b);
+    font-size: 0.9rem;
+    font-weight: 800;
+  }
+  .tool-page__breadcrumbs a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .tool-page__breadcrumbs a:hover {
+    color: var(--color-primary, #2563eb);
+  }
+  .tool-page__breadcrumbs [aria-current='page'] {
+    color: var(--color-text, #0f172a);
+  }
+  .tool-page__hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: clamp(1.2rem, 4vw, 2.5rem);
+    align-items: center;
+    padding: clamp(1.4rem, 4vw, 3rem);
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: var(--radius-2xl, 1.5rem);
+    background:
+      radial-gradient(
+        circle at 12% 10%,
+        color-mix(in srgb, var(--color-primary, #2563eb) 15%, transparent),
+        transparent 20rem
+      ),
+      linear-gradient(135deg, var(--color-surface-raised, #fff), var(--color-surface-soft, #f8fafc));
+    box-shadow: var(--shadow-md, 0 18px 48px rgb(15 23 42 / 0.12));
+  }
+  .tool-page__hero-copy {
+    display: grid;
+    gap: 0.9rem;
+  }
+  .tool-page__badge {
+    width: fit-content;
+    padding: 0.4rem 0.75rem;
+    border-radius: 999px;
+    background: var(--color-primary-soft, #dbeafe);
+    color: var(--color-primary, #2563eb);
+    font-size: 0.8rem;
+    font-weight: 950;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .tool-page__hero h1 {
+    max-width: 16ch;
+    margin: 0;
+    color: var(--color-text, #0f172a);
+    font-size: clamp(2.2rem, 7vw, 5.4rem);
+    line-height: 0.92;
+    letter-spacing: -0.075em;
+  }
+  .tool-page__hero p {
+    max-width: 58rem;
+    margin: 0;
+    color: var(--color-text-muted, #475569);
+    font-size: clamp(1.02rem, 2vw, 1.26rem);
+  }
+  .tool-page__hero-visual {
+    display: grid;
+    width: clamp(8rem, 18vw, 14rem);
+    aspect-ratio: 1;
+    place-items: center;
+    padding: 1rem;
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 2rem;
+    background: var(--color-surface, #fff);
+    box-shadow: var(--shadow-lg, 0 24px 70px rgb(15 23 42 / 0.16));
+    color: var(--color-primary, #2563eb);
+    text-align: center;
+    transform: rotate(3deg);
+  }
+  .tool-page__hero-visual .tool-icon {
+    font-size: 2.2rem;
+  }
+  .tool-page__hero-visual strong {
+    color: var(--color-text, #0f172a);
+    font-size: clamp(1rem, 2vw, 1.25rem);
+    line-height: 1.05;
+  }
+  .tool-page__hero-visual small {
+    color: var(--color-text-muted, #64748b);
+    font-weight: 850;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .tool-page__app {
+    display: grid;
+  }
+  .tool-page__section,
+  .tool-page__info-grid article {
+    padding: clamp(1.1rem, 3vw, 1.8rem);
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: var(--radius-xl, 1.25rem);
+    background: var(--color-surface, #fff);
+    box-shadow: var(--shadow-sm, 0 10px 28px rgb(15 23 42 / 0.08));
+  }
+  .tool-page__section-head {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    margin-bottom: 0.9rem;
+  }
+  .tool-page__section-head > span {
+    display: grid;
+    width: 2.6rem;
+    height: 2.6rem;
+    place-items: center;
+    border-radius: 0.9rem;
+    background: var(--color-surface-soft, #f8fafc);
+    font-weight: 950;
+  }
+  .tool-page__section h2,
+  .tool-page__info-grid h2 {
+    margin: 0;
+    color: var(--color-text, #0f172a);
+    letter-spacing: -0.035em;
+  }
+  .tool-page__section p,
+  .tool-page__info-grid p {
+    margin: 0.35rem 0 0;
+    color: var(--color-text-muted, #64748b);
+  }
+  .tool-page__steps {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: steps;
+  }
+  .tool-page__steps li {
+    display: grid;
+    gap: 0.35rem;
+    padding: 1rem;
+    border-radius: 1rem;
+    background: var(--color-surface-soft, #f8fafc);
+    counter-increment: steps;
+  }
+  .tool-page__steps li::before {
+    content: counter(steps);
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    place-items: center;
+    border-radius: 999px;
+    background: linear-gradient(
+      135deg,
+      var(--color-primary, #2563eb),
+      var(--color-secondary, #7c3aed)
+    );
+    color: #fff;
+    font-weight: 950;
+  }
+  .tool-page__steps strong {
+    color: var(--color-text, #0f172a);
+  }
+  .tool-page__steps span {
+    color: var(--color-text-muted, #64748b);
+  }
+  .tool-page__section--trust {
+    background: linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--color-success, #22c55e) 10%, var(--color-surface, #fff)),
+      var(--color-surface, #fff)
+    );
+  }
+  .tool-page__section--trust .trust-badges {
+    margin-top: 1rem;
+  }
+  .tool-page__info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+  .tool-page__faq-list {
+    display: grid;
+    gap: 0.65rem;
+  }
+  .tool-page__faq-list details {
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-soft);
+  }
+  .tool-page__faq-list summary {
+    color: var(--color-text);
+    cursor: pointer;
+    font-weight: 900;
+  }
+  .tool-page__faq-list details[open] summary {
+    color: var(--color-primary);
+  }
+  .tool-page__related-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.85rem;
+  }
+  .tool-page__related-grid a {
+    display: grid;
+    gap: 0.45rem;
+    padding: 1rem;
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 1rem;
+    background: var(--color-surface-soft, #f8fafc);
+    color: var(--color-text, #0f172a);
+    text-decoration: none;
+    transition:
+      transform var(--transition-base, 180ms ease),
+      border-color var(--transition-base, 180ms ease);
+  }
+  .tool-page__related-grid a:hover {
+    transform: translateY(-2px);
+    border-color: var(--color-primary, #2563eb);
+  }
+  .tool-page__related-grid span {
+    color: var(--color-primary, #2563eb);
+    font-size: 0.86rem;
+    font-weight: 900;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  @media (max-width: 860px) {
+    .tool-page__hero,
+    .tool-page__steps,
+    .tool-page__info-grid,
+    .tool-page__related-grid {
+      grid-template-columns: 1fr;
+    }
+    .tool-page__hero-visual {
+      width: min(100%, 12rem);
+      justify-self: start;
+    }
+    .tool-page__hero h1 {
+      max-width: none;
+    }
+  }
 </style>

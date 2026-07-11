@@ -1,0 +1,87 @@
+---
+import ToolPageLayout from '../../layouts/ToolPageLayout.astro';
+import ResizePdfTool from '../../components/ResizePdfTool.svelte';
+import { getLocalizedPath, isLang, type Lang } from '../../i18n/utils';
+import { locales } from '../../i18n/ui';
+
+export function getStaticPaths() {
+  return locales.map((lang) => ({ params: { lang } }));
+}
+const { lang } = Astro.params;
+if (!isLang(lang)) return Astro.redirect(getLocalizedPath('es', 'cambiar-tamano-pdf'));
+
+const copy = {
+  es: {
+    title: 'Cambiar tamaño de PDF online a A4, A3 o Carta',
+    description:
+      'Cambia el tamaño de las páginas de un PDF a A3, A4, A5, Carta o Legal directamente en tu navegador y sin subir archivos.',
+    badge: 'Editar PDF · Tamaños estándar · Privado',
+    h1: 'Cambiar tamaño de PDF online',
+    lead: 'Adapta todas las páginas de un PDF a A3, A4, A5, Carta o Legal, elige orientación y margen y conserva el contenido vectorial siempre que sea posible.',
+    steps: [
+      { title: 'Carga el PDF', text: 'Selecciona un documento desde tu dispositivo.' },
+      { title: 'Elige el formato', text: 'Configura tamaño, orientación y margen del resultado.' },
+      {
+        title: 'Revisa y descarga',
+        text: 'Genera la copia, comprueba el encaje en la vista previa y descárgala.',
+      },
+    ],
+    info: [
+      {
+        title: '¿Se deforma el contenido?',
+        text: 'No. La herramienta mantiene la proporción de cada página y la centra dentro del formato y margen elegidos.',
+      },
+      {
+        title: 'Útil para imprimir',
+        text: 'Normalizar un documento a A4 o Carta facilita preparar archivos con tamaños mezclados antes de imprimirlos o compartirlos.',
+      },
+    ],
+    footer:
+      'Cambia el tamaño de tus PDF localmente y revisa siempre el resultado antes de imprimir.',
+  },
+  en: {
+    title: 'Resize PDF online to A4, A3 or Letter',
+    description:
+      'Resize PDF pages to A3, A4, A5, Letter or Legal directly in your browser without uploading files.',
+    badge: 'Edit PDF · Standard sizes · Private',
+    h1: 'Resize PDF pages online',
+    lead: 'Fit every PDF page to A3, A4, A5, Letter or Legal, choose orientation and margins, and preserve vector content whenever possible.',
+    steps: [
+      { title: 'Upload the PDF', text: 'Select a document from your device.' },
+      { title: 'Choose the format', text: 'Set the output size, orientation and margin.' },
+      {
+        title: 'Review and download',
+        text: 'Generate the copy, check the fit in the preview and download it.',
+      },
+    ],
+    info: [
+      {
+        title: 'Will content be distorted?',
+        text: 'No. The tool keeps each page proportional and centers it inside the selected format and margin.',
+      },
+      {
+        title: 'Useful for printing',
+        text: 'Normalizing a document to A4 or Letter helps prepare mixed-size files before printing or sharing them.',
+      },
+    ],
+    footer: 'Resize PDFs locally and always review the result before printing.',
+  },
+} as const;
+const page = copy[lang as Lang];
+---
+
+<ToolPageLayout
+  lang={lang}
+  title={page.title}
+  description={page.description}
+  path="cambiar-tamano-pdf"
+  toolId="resize-pdf"
+  badge={page.badge}
+  h1={page.h1}
+  lead={page.lead}
+  steps={page.steps}
+  infoBlocks={page.info}
+  footer={page.footer}
+>
+  <ResizePdfTool client:load lang={lang} />
+</ToolPageLayout>

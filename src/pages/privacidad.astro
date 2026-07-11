@@ -1,5 +1,18 @@
 ---
-import { getLocalizedPath } from '../i18n/utils';
-
-return Astro.redirect(getLocalizedPath('es', 'privacidad'));
+const target = '/es/privacidad';
 ---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="robots" content="noindex,follow" />
+    <title>Privacidad · FácilPDF</title>
+    <link rel="canonical" href={new URL(target, Astro.site)} />
+    <meta http-equiv="refresh" content={`0; url=${target}`} />
+  </head>
+  <body>
+    <main><p>Redirigiendo a <a href={target}>la política de privacidad de FácilPDF</a>…</p></main>
+  </body>
+</html>

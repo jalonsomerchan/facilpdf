@@ -39,7 +39,7 @@ export interface CompressPdfOptions {
   level: CompressionLevel;
   pages?: number[];
   rotations?: Record<number, number>;
-  onProgress?: (progress: CompressionProgress) => void;
+  onProgress?: (_progress: CompressionProgress) => void;
 }
 
 export const compressionPresets: Record<CompressionLevel, CompressionPreset> = {
@@ -66,7 +66,13 @@ export const compressionPresets: Record<CompressionLevel, CompressionPreset> = {
   },
 };
 
-export async function compressPdfInBrowser({ file, level, pages, rotations = {}, onProgress }: CompressPdfOptions): Promise<CompressionResult> {
+export async function compressPdfInBrowser({
+  file,
+  level,
+  pages,
+  rotations = {},
+  onProgress,
+}: CompressPdfOptions): Promise<CompressionResult> {
   const preset = compressionPresets[level];
   const arrayBuffer = await file.arrayBuffer();
   const sourceBytes = new Uint8Array(arrayBuffer.slice(0));
@@ -76,7 +82,6 @@ export async function compressPdfInBrowser({ file, level, pages, rotations = {},
   const loadingTask = getDocument({
     data: sourceBytes.slice(),
     useWorkerFetch: false,
-    isEvalSupported: false,
     disableAutoFetch: true,
     disableStream: true,
   });
@@ -96,7 +101,11 @@ export async function compressPdfInBrowser({ file, level, pages, rotations = {},
       onProgress?.({ currentPage: index + 1, totalPages: pageNumbers.length, stage: 'rendering' });
 
       const page = await pdf.getPage(pageNumber);
-      const renderedPage = await renderPageToJpeg(page, preset, normalizeDegrees(rotations[pageNumber] ?? 0));
+      const renderedPage = await renderPageToJpeg(
+        page,
+        preset,
+        normalizeDegrees(rotations[pageNumber] ?? 0),
+      );
       page.cleanup();
 
       onProgress?.({ currentPage: index + 1, totalPages: pageNumbers.length, stage: 'building' });
@@ -113,7 +122,11 @@ export async function compressPdfInBrowser({ file, level, pages, rotations = {},
       await yieldToBrowser();
     }
 
-    onProgress?.({ currentPage: pageNumbers.length, totalPages: pageNumbers.length, stage: 'saving' });
+    onProgress?.({
+      currentPage: pageNumbers.length,
+      totalPages: pageNumbers.length,
+      stage: 'saving',
+    });
 
     const compressedBytes = await outputPdf.save({ useObjectStreams: true });
     const reductionPercent = calculateReduction(sourceBytes.byteLength, compressedBytes.byteLength);
@@ -133,8 +146,14 @@ export async function compressPdfInBrowser({ file, level, pages, rotations = {},
 
 async function renderPageToJpeg(page: PDFPageProxy, preset: CompressionPreset, rotation = 0) {
   const baseViewport = page.getViewport({ scale: 1 });
-  const renderViewport = page.getViewport({ scale: preset.scale, rotation: normalizeDegrees(baseViewport.rotation + rotation) });
-  const outputViewport = page.getViewport({ scale: 1, rotation: normalizeDegrees(baseViewport.rotation + rotation) });
+  const renderViewport = page.getViewport({
+    scale: preset.scale,
+    rotation: normalizeDegrees(baseViewport.rotation + rotation),
+  });
+  const outputViewport = page.getViewport({
+    scale: 1,
+    rotation: normalizeDegrees(baseViewport.rotation + rotation),
+  });
   const canvas = document.createElement('canvas');
   const context = canvas.getContext('2d', { alpha: false });
 
@@ -147,7 +166,7 @@ async function renderPageToJpeg(page: PDFPageProxy, preset: CompressionPreset, r
   context.fillStyle = '#ffffff';
   context.fillRect(0, 0, canvas.width, canvas.height);
 
-  await page.render({ canvasContext: context, viewport: renderViewport }).promise;
+  await page.render({ canvas, canvasContext: context, viewport: renderViewport }).promise;
 
   const jpegBlob = await canvasToBlob(canvas, preset.quality);
   const jpegBytes = new Uint8Array(await jpegBlob.arrayBuffer());
@@ -163,7 +182,9 @@ async function renderPageToJpeg(page: PDFPageProxy, preset: CompressionPreset, r
 }
 
 function normalizePages(pages: number[] | undefined, totalPages: number) {
-  const selected = pages?.length ? [...new Set(pages)].sort((a, b) => a - b) : Array.from({ length: totalPages }, (_, index) => index + 1);
+  const selected = pages?.length
+    ? [...new Set(pages)].sort((a, b) => a - b)
+    : Array.from({ length: totalPages }, (_, index) => index + 1);
 
   selected.forEach((page) => {
     if (!Number.isSafeInteger(page) || page < 1 || page > totalPages) {
@@ -209,6 +230,7 @@ async function destroyPdf(pdf: PDFDocumentProxy) {
 
 function yieldToBrowser() {
   return new Promise<void>((resolve) => {
-    window.requestIdleCallback?.(() => resolve(), { timeout: 120 }) ?? window.setTimeout(resolve, 0);
+    window.requestIdleCallback?.(() => resolve(), { timeout: 120 }) ??
+      window.setTimeout(resolve, 0);
   });
 }

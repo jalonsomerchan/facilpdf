@@ -8,39 +8,72 @@ interface Props {
 const { name = 'pdf', label, size = 'md' } = Astro.props;
 const titleId = `tool-icon-${name}-${Math.random().toString(36).slice(2)}`;
 const icons: Record<string, string> = {
-  'pdf-multitool': '<path d="M7 4.75A2.75 2.75 0 0 1 9.75 2h4.7L20 7.55v11.7A2.75 2.75 0 0 1 17.25 22h-7.5A2.75 2.75 0 0 1 7 19.25V4.75Z"/><path d="M14 2v4.25A1.75 1.75 0 0 0 15.75 8H20"/><path d="M4 8.5h7M4 12h9M4 15.5h7"/>',
-  'merge-pdf': '<path d="M5 4.75A2.75 2.75 0 0 1 7.75 2h4.5A2.75 2.75 0 0 1 15 4.75v14.5A2.75 2.75 0 0 1 12.25 22h-4.5A2.75 2.75 0 0 1 5 19.25V4.75Z"/><path d="M15 7h1.25A2.75 2.75 0 0 1 19 9.75v7.5A2.75 2.75 0 0 1 16.25 20H15"/><path d="M8 12h4M10 10v4"/>',
-  'split-pdf': '<path d="M4 4.75A2.75 2.75 0 0 1 6.75 2h10.5A2.75 2.75 0 0 1 20 4.75v14.5A2.75 2.75 0 0 1 17.25 22H6.75A2.75 2.75 0 0 1 4 19.25V4.75Z"/><path d="M12 3v18"/><path d="m9 9-3 3 3 3M15 9l3 3-3 3"/>',
-  'delete-pages-pdf': '<path d="M6 7h12"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7"/><path d="M8 7.5 8.8 19A2 2 0 0 0 10.8 21h2.4a2 2 0 0 0 2-2L16 7.5"/><path d="M10.5 11v5M13.5 11v5"/>',
-  'reorder-pdf': '<path d="M7 4h10M7 20h10"/><path d="M12 7v10"/><path d="m9 10 3-3 3 3M9 14l3 3 3-3"/><path d="M4 8h2M4 12h2M4 16h2M18 8h2M18 12h2M18 16h2"/>',
-  'rotate-pdf': '<path d="M7.5 6.5A7 7 0 1 1 5 11.85"/><path d="M5 5.5v6h6"/><path d="M9 10h6v6H9z"/>',
-  'compress-pdf': '<path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M9 9h6M9 15h6M10 12h4"/><path d="m8 6 2 2M16 6l-2 2M8 18l2-2M16 18l-2-2"/>',
-  'watermark-pdf': '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M8 16c2.5-4 5.5-4 8 0"/><path d="M9 12.5c1.8-1.8 4.2-1.8 6 0"/>',
-  'sign-pdf': '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M8 17c2-3 3.4-3 4.2-.2.5 1.7 2.6-2.2 4.8-.6"/><path d="m15.5 10.5 2-2a1.5 1.5 0 0 0-2.1-2.1l-2 2L13 11l2.5-.5Z"/>',
-  'extract-text-pdf': '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 10h6M9 13h6M9 16h4"/>',
-  'extract-images-pdf': '<path d="M5 5.75A2.75 2.75 0 0 1 7.75 3h8.5A2.75 2.75 0 0 1 19 5.75v12.5A2.75 2.75 0 0 1 16.25 21h-8.5A2.75 2.75 0 0 1 5 18.25V5.75Z"/><path d="m8 16 2.4-2.4a1 1 0 0 1 1.4 0L13 14.8l1.2-1.2a1 1 0 0 1 1.4 0L17 15"/><circle cx="10" cy="8" r="1"/><path d="M3.5 12.5h3M17.5 12.5h3"/>',
-  'scan-pdf': '<path d="M4 8V5.75A1.75 1.75 0 0 1 5.75 4H8M16 4h2.25A1.75 1.75 0 0 1 20 5.75V8M20 16v2.25A1.75 1.75 0 0 1 18.25 20H16M8 20H5.75A1.75 1.75 0 0 1 4 18.25V16"/><path d="M7 12h10"/><path d="M8.5 8h7v8h-7z"/>',
-  'images-to-pdf': '<path d="M5 5.75A2.75 2.75 0 0 1 7.75 3h8.5A2.75 2.75 0 0 1 19 5.75v12.5A2.75 2.75 0 0 1 16.25 21h-8.5A2.75 2.75 0 0 1 5 18.25V5.75Z"/><path d="m8 16 2.4-2.4a1 1 0 0 1 1.4 0L13 14.8l1.2-1.2a1 1 0 0 1 1.4 0L17 15"/><circle cx="10" cy="8" r="1"/>',
-  'test-pdf-generator': '<path d="M9 3h6"/><path d="M10 3v5.2l-4.5 7.4A3.5 3.5 0 0 0 8.5 21h7a3.5 3.5 0 0 0 3-5.4L14 8.2V3"/><path d="M8 16h8"/>',
-  'protect-pdf': '<path d="M12 22s7-3.5 7-10V5l-7-3-7 3v7c0 6.5 7 10 7 10Z"/><path d="M9.5 12h5v4h-5z"/><path d="M10.5 12v-1.5a1.5 1.5 0 0 1 3 0V12"/>',
-  'unlock-pdf': '<path d="M12 22s7-3.5 7-10V5l-7-3-7 3v7c0 6.5 7 10 7 10Z"/><path d="M9.5 12h5v4h-5z"/><path d="M10.5 12v-2a1.5 1.5 0 0 1 2.7-.9"/>',
-  'edit-metadata': '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 17.5h2.5L16.5 12a1.75 1.75 0 0 0-2.5-2.45L9 15v2.5Z"/>',
-  'page-numbers': '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 11h2v6M14 17h2M14 13.5h1.5a1.5 1.5 0 0 0 0-3H14"/>',
+  'pdf-multitool':
+    '<path d="M7 4.75A2.75 2.75 0 0 1 9.75 2h4.7L20 7.55v11.7A2.75 2.75 0 0 1 17.25 22h-7.5A2.75 2.75 0 0 1 7 19.25V4.75Z"/><path d="M14 2v4.25A1.75 1.75 0 0 0 15.75 8H20"/><path d="M4 8.5h7M4 12h9M4 15.5h7"/>',
+  'merge-pdf':
+    '<path d="M5 4.75A2.75 2.75 0 0 1 7.75 2h4.5A2.75 2.75 0 0 1 15 4.75v14.5A2.75 2.75 0 0 1 12.25 22h-4.5A2.75 2.75 0 0 1 5 19.25V4.75Z"/><path d="M15 7h1.25A2.75 2.75 0 0 1 19 9.75v7.5A2.75 2.75 0 0 1 16.25 20H15"/><path d="M8 12h4M10 10v4"/>',
+  'split-pdf':
+    '<path d="M4 4.75A2.75 2.75 0 0 1 6.75 2h10.5A2.75 2.75 0 0 1 20 4.75v14.5A2.75 2.75 0 0 1 17.25 22H6.75A2.75 2.75 0 0 1 4 19.25V4.75Z"/><path d="M12 3v18"/><path d="m9 9-3 3 3 3M15 9l3 3-3 3"/>',
+  'delete-pages-pdf':
+    '<path d="M6 7h12"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7"/><path d="M8 7.5 8.8 19A2 2 0 0 0 10.8 21h2.4a2 2 0 0 0 2-2L16 7.5"/><path d="M10.5 11v5M13.5 11v5"/>',
+  'reorder-pdf':
+    '<path d="M7 4h10M7 20h10"/><path d="M12 7v10"/><path d="m9 10 3-3 3 3M9 14l3 3 3-3"/><path d="M4 8h2M4 12h2M4 16h2M18 8h2M18 12h2M18 16h2"/>',
+  'rotate-pdf':
+    '<path d="M7.5 6.5A7 7 0 1 1 5 11.85"/><path d="M5 5.5v6h6"/><path d="M9 10h6v6H9z"/>',
+  'resize-pdf':
+    '<path d="M5 5h5M5 5v5M19 5h-5M19 5v5M5 19h5M5 19v-5M19 19h-5M19 19v-5"/><path d="M9 12h6M10.5 10.5 9 12l1.5 1.5M13.5 10.5 15 12l-1.5 1.5"/>',
+  'compress-pdf':
+    '<path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M9 9h6M9 15h6M10 12h4"/><path d="m8 6 2 2M16 6l-2 2M8 18l2-2M16 18l-2-2"/>',
+  'watermark-pdf':
+    '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M8 16c2.5-4 5.5-4 8 0"/><path d="M9 12.5c1.8-1.8 4.2-1.8 6 0"/>',
+  'sign-pdf':
+    '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M8 17c2-3 3.4-3 4.2-.2.5 1.7 2.6-2.2 4.8-.6"/><path d="m15.5 10.5 2-2a1.5 1.5 0 0 0-2.1-2.1l-2 2L13 11l2.5-.5Z"/>',
+  'extract-text-pdf':
+    '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 10h6M9 13h6M9 16h4"/>',
+  'extract-images-pdf':
+    '<path d="M5 5.75A2.75 2.75 0 0 1 7.75 3h8.5A2.75 2.75 0 0 1 19 5.75v12.5A2.75 2.75 0 0 1 16.25 21h-8.5A2.75 2.75 0 0 1 5 18.25V5.75Z"/><path d="m8 16 2.4-2.4a1 1 0 0 1 1.4 0L13 14.8l1.2-1.2a1 1 0 0 1 1.4 0L17 15"/><circle cx="10" cy="8" r="1"/><path d="M3.5 12.5h3M17.5 12.5h3"/>',
+  'scan-pdf':
+    '<path d="M4 8V5.75A1.75 1.75 0 0 1 5.75 4H8M16 4h2.25A1.75 1.75 0 0 1 20 5.75V8M20 16v2.25A1.75 1.75 0 0 1 18.25 20H16M8 20H5.75A1.75 1.75 0 0 1 4 18.25V16"/><path d="M7 12h10"/><path d="M8.5 8h7v8h-7z"/>',
+  'images-to-pdf':
+    '<path d="M5 5.75A2.75 2.75 0 0 1 7.75 3h8.5A2.75 2.75 0 0 1 19 5.75v12.5A2.75 2.75 0 0 1 16.25 21h-8.5A2.75 2.75 0 0 1 5 18.25V5.75Z"/><path d="m8 16 2.4-2.4a1 1 0 0 1 1.4 0L13 14.8l1.2-1.2a1 1 0 0 1 1.4 0L17 15"/><circle cx="10" cy="8" r="1"/>',
+  'test-pdf-generator':
+    '<path d="M9 3h6"/><path d="M10 3v5.2l-4.5 7.4A3.5 3.5 0 0 0 8.5 21h7a3.5 3.5 0 0 0 3-5.4L14 8.2V3"/><path d="M8 16h8"/>',
+  'protect-pdf':
+    '<path d="M12 22s7-3.5 7-10V5l-7-3-7 3v7c0 6.5 7 10 7 10Z"/><path d="M9.5 12h5v4h-5z"/><path d="M10.5 12v-1.5a1.5 1.5 0 0 1 3 0V12"/>',
+  'unlock-pdf':
+    '<path d="M12 22s7-3.5 7-10V5l-7-3-7 3v7c0 6.5 7 10 7 10Z"/><path d="M9.5 12h5v4h-5z"/><path d="M10.5 12v-2a1.5 1.5 0 0 1 2.7-.9"/>',
+  'edit-metadata':
+    '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 17.5h2.5L16.5 12a1.75 1.75 0 0 0-2.5-2.45L9 15v2.5Z"/>',
+  'page-numbers':
+    '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 11h2v6M14 17h2M14 13.5h1.5a1.5 1.5 0 0 0 0-3H14"/>',
   'repair-pdf': '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="m9 15 2-2 2 2 3-3"/>',
-  organizar: '<path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H10l1.5 2H18a2.5 2.5 0 0 1 2.5 2.5v7A2.5 2.5 0 0 1 18 19H6.5A2.5 2.5 0 0 1 4 16.5v-9Z"/>',
+  'flatten-pdf':
+    '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 11h6M9 14h6M9 17h4"/><path d="m8 8 2 2 4-4"/>',
+  organizar:
+    '<path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H10l1.5 2H18a2.5 2.5 0 0 1 2.5 2.5v7A2.5 2.5 0 0 1 18 19H6.5A2.5 2.5 0 0 1 4 16.5v-9Z"/>',
   convertir: '<path d="M7 7h10M14 4l3 3-3 3"/><path d="M17 17H7M10 14l-3 3 3 3"/>',
   optimizar: '<path d="M13 2 5 13h6l-1 9 8-12h-6l1-8Z"/>',
   seguridad: '<path d="M12 22s7-3.5 7-10V5l-7-3-7 3v7c0 6.5 7 10 7 10Z"/>',
   edicion: '<path d="M5 19h4l10-10a2.8 2.8 0 0 0-4-4L5 15v4Z"/><path d="M13.5 6.5l4 4"/>',
-  utilidad: '<path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M5 7h14v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7Z"/><path d="M9 12h6"/>',
+  utilidad:
+    '<path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M5 7h14v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7Z"/><path d="M9 12h6"/>',
   pdf: '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 12h6M9 15h4"/>',
 };
 const icon = icons[name] ?? icons.pdf;
-const ariaAttrs = label ? { role: 'img', 'aria-labelledby': titleId } : { 'aria-hidden': 'true' };
+const ariaAttrs = label
+  ? { role: 'img' as const, 'aria-labelledby': titleId }
+  : { 'aria-hidden': 'true' as const };
 ---
 
 <span class:list={['tool-icon', `tool-icon--${size}`]} {...ariaAttrs}>
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+  <svg
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.9"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
     {label && <title id={titleId}>{label}</title>}
     <Fragment set:html={icon} />
   </svg>
@@ -55,9 +88,15 @@ const ariaAttrs = label ? { role: 'img', 'aria-labelledby': titleId } : { 'aria-
     color: currentColor;
   }
 
-  .tool-icon--sm { font-size: 1rem; }
-  .tool-icon--md { font-size: 1.35rem; }
-  .tool-icon--lg { font-size: 1.7rem; }
+  .tool-icon--sm {
+    font-size: 1rem;
+  }
+  .tool-icon--md {
+    font-size: 1.35rem;
+  }
+  .tool-icon--lg {
+    font-size: 1.7rem;
+  }
 
   .tool-icon svg {
     width: 100%;

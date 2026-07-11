@@ -10,12 +10,13 @@ interface Props {
   title: string;
   description: string;
   path?: string;
+  structuredData?: Record<string, unknown> | Record<string, unknown>[];
 }
 
-const { lang, title, description, path = '' } = Astro.props;
+const { lang, title, description, path = '', structuredData: customStructuredData } = Astro.props;
 const canonicalUrl = new URL(getLocalizedPath(lang, path), Astro.site);
 const alternateLinks = getAlternateLinks(path);
-const structuredData = {
+const defaultStructuredData = {
   '@context': 'https://schema.org',
   '@type': 'WebSite',
   name: 'FácilPDF',
@@ -23,7 +24,10 @@ const structuredData = {
   inLanguage: lang,
   description,
 };
-const navTools = pdfTools.filter((tool) => ['merge-pdf', 'split-pdf', 'compress-pdf'].includes(tool.id));
+const structuredData = customStructuredData ?? defaultStructuredData;
+const navTools = pdfTools.filter((tool) =>
+  ['merge-pdf', 'split-pdf', 'compress-pdf'].includes(tool.id),
+);
 const convertTools = pdfTools.filter((tool) => tool.category === 'convertir').slice(0, 4);
 const footerTools = pdfTools.filter((tool) => tool.status === 'available').slice(0, 6);
 const footerLabels = {
@@ -33,7 +37,8 @@ const footerLabels = {
     categories: 'Categorías',
     project: 'Proyecto',
     privacyTitle: 'Privacidad primero',
-    privacyText: 'Tus archivos se procesan localmente siempre que la herramienta lo permite. Sin instalaciones, sin subidas innecesarias y con control sobre tus documentos.',
+    privacyText:
+      'Tus archivos se procesan localmente siempre que la herramienta lo permite. Sin instalaciones, sin subidas innecesarias y con control sobre tus documentos.',
     allTools: 'Todas las herramientas',
     privacy: 'Privacidad',
     github: 'GitHub',
@@ -46,7 +51,8 @@ const footerLabels = {
     categories: 'Categories',
     project: 'Project',
     privacyTitle: 'Privacy first',
-    privacyText: 'Your files are processed locally whenever the tool supports it. No installs, no unnecessary uploads and full control over your documents.',
+    privacyText:
+      'Your files are processed locally whenever the tool supports it. No installs, no unnecessary uploads and full control over your documents.',
     allTools: 'All tools',
     privacy: 'Privacy',
     github: 'GitHub',
@@ -100,28 +106,39 @@ const navLabels = {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
-    <meta name="robots" content="index,follow" />
+    <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="theme-color" content="#f8fafc" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalUrl} />
-    {alternateLinks.map((alternate) => (
-      <link
-        rel="alternate"
-        hreflang={alternate.lang}
-        href={new URL(alternate.path, Astro.site)}
-      />
-    ))}
-    <link rel="alternate" hreflang="x-default" href={new URL(getLocalizedPath('es', path), Astro.site)} />
+    {
+      alternateLinks.map((alternate) => (
+        <link
+          rel="alternate"
+          hreflang={alternate.lang}
+          href={new URL(alternate.path, Astro.site)}
+        />
+      ))
+    }
+    <link
+      rel="alternate"
+      hreflang="x-default"
+      href={new URL(getLocalizedPath('es', path), Astro.site)}
+    />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="FácilPDF" />
     <meta property="og:locale" content={lang === 'es' ? 'es_ES' : 'en_US'} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={new URL('/pwa-icon.svg', Astro.site)} />
+    <meta property="og:image:alt" content="FácilPDF · Herramientas PDF privadas" />
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={new URL('/pwa-icon.svg', Astro.site)} />
+    <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" href="/favicon.ico" />
     <script is:inline>
@@ -129,7 +146,9 @@ const navLabels = {
         const STORAGE_KEY = 'theme';
         const applyTheme = (theme) => {
           document.documentElement.dataset.theme = theme;
-          document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#020617' : '#f8fafc');
+          document
+            .querySelector('meta[name="theme-color"]')
+            ?.setAttribute('content', theme === 'dark' ? '#020617' : '#f8fafc');
         };
 
         try {
@@ -141,7 +160,7 @@ const navLabels = {
         }
       })();
     </script>
-    <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(structuredData)} />
   </head>
   <body>
     <a class="skip-link" href="#main">{navLabels[lang].skip}</a>
@@ -168,19 +187,23 @@ const navLabels = {
 
         <div class="header-right" id="site-menu" data-site-menu>
           <nav class="primary-nav" aria-label={navLabels[lang].navigation}>
-            {navTools.map((tool) => (
-              <a href={getLocalizedPath(lang, tool.route)}>{tool.title[lang]}</a>
-            ))}
+            {
+              navTools.map((tool) => (
+                <a href={getLocalizedPath(lang, tool.route)}>{tool.title[lang]}</a>
+              ))
+            }
 
             <details class="nav-dropdown">
               <summary>{navLabels[lang].convert}</summary>
               <div class="nav-dropdown__panel">
-                {convertTools.map((tool) => (
-                  <a href={getLocalizedPath(lang, tool.route)}>
-                    <span aria-hidden="true">{tool.icon}</span>
-                    {tool.title[lang]}
-                  </a>
-                ))}
+                {
+                  convertTools.map((tool) => (
+                    <a href={getLocalizedPath(lang, tool.route)}>
+                      <span aria-hidden="true">{tool.icon}</span>
+                      {tool.title[lang]}
+                    </a>
+                  ))
+                }
               </div>
             </details>
 
@@ -188,33 +211,44 @@ const navLabels = {
               <summary>{navLabels[lang].allTools}</summary>
               <div class="nav-dropdown__panel nav-dropdown__panel--grid">
                 <strong>{navLabels[lang].categories}</strong>
-                {pdfToolCategories.map((category) => (
-                  <a href={getLocalizedPath(lang, `categoria/${category.id}`)}>
-                    <span aria-hidden="true">{category.icon}</span>
-                    {category.title[lang]}
-                  </a>
-                ))}
+                {
+                  pdfToolCategories.map((category) => (
+                    <a href={getLocalizedPath(lang, `categoria/${category.id}`)}>
+                      <span aria-hidden="true">{category.icon}</span>
+                      {category.title[lang]}
+                    </a>
+                  ))
+                }
               </div>
             </details>
           </nav>
 
           <div class="site-actions">
-            <button class="theme-toggle" type="button" aria-label={navLabels[lang].theme} data-theme-toggle>
+            <button
+              class="theme-toggle"
+              type="button"
+              aria-label={navLabels[lang].theme}
+              data-theme-toggle
+            >
               <span class="theme-toggle__icon" aria-hidden="true" data-theme-toggle-icon>☀️</span>
-              <span class="theme-toggle__text" data-theme-toggle-text>{navLabels[lang].themeShort}</span>
+              <span class="theme-toggle__text" data-theme-toggle-text
+                >{navLabels[lang].themeShort}</span
+              >
             </button>
 
             <nav class="language-nav" aria-label={navLabels[lang].language}>
-              {alternateLinks.map((alternate) => (
-                <a
-                  href={alternate.path}
-                  class:list={[{ active: alternate.lang === lang }]}
-                  lang={alternate.lang}
-                  aria-current={alternate.lang === lang ? 'page' : undefined}
-                >
-                  {alternate.lang.toUpperCase()}
-                </a>
-              ))}
+              {
+                alternateLinks.map((alternate) => (
+                  <a
+                    href={alternate.path}
+                    class:list={[{ active: alternate.lang === lang }]}
+                    lang={alternate.lang}
+                    aria-current={alternate.lang === lang ? 'page' : undefined}
+                  >
+                    {alternate.lang.toUpperCase()}
+                  </a>
+                ))
+              }
             </nav>
           </div>
         </div>
@@ -228,7 +262,11 @@ const navLabels = {
     <footer class="site-footer">
       <div class="site-footer__inner">
         <section class="footer-brand" aria-label="FácilPDF">
-          <a class="brand footer-brand__logo" href={getLocalizedPath(lang)} aria-label={navLabels[lang].home}>
+          <a
+            class="brand footer-brand__logo"
+            href={getLocalizedPath(lang)}
+            aria-label={navLabels[lang].home}
+          >
             <span class="brand__mark" aria-hidden="true">PDF</span>
             <strong>FácilPDF</strong>
           </a>
@@ -238,24 +276,34 @@ const navLabels = {
 
         <nav class="footer-column" aria-label={footerLabels[lang].popularTools}>
           <h2>{footerLabels[lang].popularTools}</h2>
-          {footerTools.map((tool) => (
-            <a href={getLocalizedPath(lang, tool.route)}>{tool.title[lang]}</a>
-          ))}
+          {
+            footerTools.map((tool) => (
+              <a href={getLocalizedPath(lang, tool.route)}>{tool.title[lang]}</a>
+            ))
+          }
         </nav>
 
         <nav class="footer-column" aria-label={footerLabels[lang].categories}>
           <h2>{footerLabels[lang].categories}</h2>
-          {pdfToolCategories.map((category) => (
-            <a href={getLocalizedPath(lang, `categoria/${category.id}`)}>{category.title[lang]}</a>
-          ))}
+          {
+            pdfToolCategories.map((category) => (
+              <a href={getLocalizedPath(lang, `categoria/${category.id}`)}>
+                {category.title[lang]}
+              </a>
+            ))
+          }
         </nav>
 
         <nav class="footer-column" aria-label={footerLabels[lang].project}>
           <h2>{footerLabels[lang].project}</h2>
           <a href={getLocalizedPath(lang)}>{footerLabels[lang].allTools}</a>
           <a href={getLocalizedPath(lang, 'privacidad')}>{footerLabels[lang].privacy}</a>
-          <a href="https://github.com/jalonsomerchan/facilpdf" rel="noreferrer">{footerLabels[lang].github}</a>
-          <a href="https://github.com/jalonsomerchan/facilpdf#readme" rel="noreferrer">{footerLabels[lang].readme}</a>
+          <a href="https://github.com/jalonsomerchan/facilpdf" rel="noreferrer"
+            >{footerLabels[lang].github}</a
+          >
+          <a href="https://github.com/jalonsomerchan/facilpdf#readme" rel="noreferrer"
+            >{footerLabels[lang].readme}</a
+          >
         </nav>
 
         <section class="footer-privacy-card" aria-labelledby="footer-privacy-title">
@@ -273,7 +321,10 @@ const navLabels = {
       </div>
     </footer>
 
-    <script is:inline define:vars={{ lightLabel: navLabels[lang].light, darkLabel: navLabels[lang].dark }}>
+    <script
+      is:inline
+      define:vars={{ lightLabel: navLabels[lang].light, darkLabel: navLabels[lang].dark }}
+    >
       (() => {
         const header = document.querySelector('[data-site-header]');
         const menuButton = document.querySelector('[data-menu-toggle]');
@@ -321,7 +372,9 @@ const navLabels = {
         button?.addEventListener('click', () => {
           const nextTheme = root.dataset.theme === 'dark' ? 'light' : 'dark';
           root.dataset.theme = nextTheme;
-          try { localStorage.setItem(STORAGE_KEY, nextTheme); } catch {}
+          try {
+            localStorage.setItem(STORAGE_KEY, nextTheme);
+          } catch {}
           sync();
         });
 
@@ -372,7 +425,7 @@ const navLabels = {
         z-index: -1;
         background: color-mix(in srgb, var(--color-surface) 94%, transparent);
         border-bottom: 1px solid color-mix(in srgb, var(--color-border) 78%, transparent);
-        box-shadow: 0 1px 0 rgb(27 31 45 / .03);
+        box-shadow: 0 1px 0 rgb(27 31 45 / 0.03);
         backdrop-filter: blur(18px);
       }
 
@@ -388,10 +441,10 @@ const navLabels = {
       .brand {
         display: inline-flex;
         align-items: center;
-        gap: .7rem;
+        gap: 0.7rem;
         color: var(--color-text);
         font-weight: 950;
-        letter-spacing: -.055em;
+        letter-spacing: -0.055em;
         text-decoration: none;
         white-space: nowrap;
       }
@@ -405,11 +458,11 @@ const navLabels = {
         place-items: center;
         width: 2.55rem;
         height: 2.55rem;
-        border-radius: .85rem;
+        border-radius: 0.85rem;
         background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
         color: #fff;
-        font-size: .72rem;
-        letter-spacing: -.03em;
+        font-size: 0.72rem;
+        letter-spacing: -0.03em;
         font-weight: 950;
         box-shadow: var(--shadow-sm);
       }
@@ -425,7 +478,7 @@ const navLabels = {
         align-items: center;
         justify-content: center;
         flex-direction: column;
-        gap: .28rem;
+        gap: 0.28rem;
         border-radius: var(--radius-md);
         border: 1px solid var(--color-border);
         background: var(--color-surface);
@@ -439,7 +492,9 @@ const navLabels = {
         height: 2px;
         border-radius: var(--radius-full);
         background: currentColor;
-        transition: transform var(--transition-base), opacity var(--transition-base);
+        transition:
+          transform var(--transition-base),
+          opacity var(--transition-base);
       }
 
       .is-menu-open .menu-toggle span:nth-child(1) {
@@ -464,13 +519,13 @@ const navLabels = {
 
       .header-right {
         justify-content: flex-end;
-        gap: clamp(.75rem, 2vw, 1.5rem);
+        gap: clamp(0.75rem, 2vw, 1.5rem);
         min-width: 0;
       }
 
       .primary-nav {
         justify-content: center;
-        gap: clamp(.35rem, .8vw, 1rem);
+        gap: clamp(0.35rem, 0.8vw, 1rem);
         overflow: visible;
         padding-bottom: 0;
       }
@@ -481,14 +536,17 @@ const navLabels = {
         display: inline-flex;
         align-items: center;
         min-height: 2.8rem;
-        padding: 0 .75rem;
+        padding: 0 0.75rem;
         border-radius: var(--radius-full);
         color: var(--color-text);
-        font-size: .96rem;
+        font-size: 0.96rem;
         font-weight: 850;
         text-decoration: none;
         white-space: nowrap;
-        transition: background var(--transition-base), color var(--transition-base), transform var(--transition-base);
+        transition:
+          background var(--transition-base),
+          color var(--transition-base),
+          transform var(--transition-base);
       }
 
       .primary-nav a:hover,
@@ -506,7 +564,7 @@ const navLabels = {
 
       .nav-dropdown summary {
         cursor: pointer;
-        gap: .45rem;
+        gap: 0.45rem;
         list-style: none;
       }
 
@@ -523,14 +581,14 @@ const navLabels = {
 
       .nav-dropdown__panel {
         position: absolute;
-        top: calc(100% + .6rem);
+        top: calc(100% + 0.6rem);
         left: 50%;
         z-index: var(--z-dropdown);
         transform: translateX(-50%);
         min-width: 15rem;
         display: grid;
-        gap: .35rem;
-        padding: .65rem;
+        gap: 0.35rem;
+        padding: 0.65rem;
         border: 1px solid var(--color-border);
         border-radius: var(--radius-lg);
         background: var(--color-surface-raised);
@@ -544,34 +602,34 @@ const navLabels = {
 
       .nav-dropdown__panel--grid strong {
         grid-column: 1 / -1;
-        padding: .4rem .6rem;
+        padding: 0.4rem 0.6rem;
         color: var(--color-text-muted);
-        font-size: .75rem;
-        letter-spacing: .08em;
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
         text-transform: uppercase;
       }
 
       .nav-dropdown__panel a {
         justify-content: flex-start;
-        gap: .5rem;
+        gap: 0.5rem;
         min-height: 2.55rem;
-        padding-inline: .7rem;
+        padding-inline: 0.7rem;
       }
 
       .site-actions {
         justify-content: flex-end;
-        gap: .45rem;
+        gap: 0.45rem;
       }
 
       .language-nav {
-        gap: .25rem;
+        gap: 0.25rem;
       }
 
       .language-nav a {
         min-height: 2.25rem;
-        padding-inline: .55rem;
+        padding-inline: 0.55rem;
         color: var(--color-text-muted);
-        font-size: .75rem;
+        font-size: 0.75rem;
       }
 
       .language-nav a.active {
@@ -585,12 +643,14 @@ const navLabels = {
         display: inline-grid;
         place-items: center;
         border: 0;
-        border-radius: .7rem;
+        border-radius: 0.7rem;
         background: transparent;
         color: var(--color-text);
         cursor: pointer;
         box-shadow: none;
-        transition: transform var(--transition-base), background var(--transition-base);
+        transition:
+          transform var(--transition-base),
+          background var(--transition-base);
       }
 
       .theme-toggle:hover {
@@ -616,14 +676,18 @@ const navLabels = {
 
       .site-footer__inner {
         display: grid;
-        grid-template-columns: minmax(18rem, 1.2fr) repeat(3, minmax(10rem, .7fr));
+        grid-template-columns: minmax(18rem, 1.2fr) repeat(3, minmax(10rem, 0.7fr));
         gap: clamp(1.5rem, 3vw, 2.5rem);
         align-items: start;
         padding: clamp(1.4rem, 3vw, 2rem);
         border: 1px solid var(--color-border);
         border-radius: var(--radius-2xl);
         background:
-          radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--color-primary) 10%, transparent), transparent 18rem),
+          radial-gradient(
+            circle at 8% 0%,
+            color-mix(in srgb, var(--color-primary) 10%, transparent),
+            transparent 18rem
+          ),
           var(--color-surface-raised);
         box-shadow: var(--shadow-sm);
       }
@@ -646,7 +710,7 @@ const navLabels = {
       .trust-badges {
         display: flex;
         flex-wrap: wrap;
-        gap: .55rem;
+        gap: 0.55rem;
         margin: 0;
         padding: 0;
         list-style: none;
@@ -655,34 +719,34 @@ const navLabels = {
       .trust-badges li {
         display: inline-flex;
         align-items: center;
-        gap: .4rem;
+        gap: 0.4rem;
         min-height: 2.25rem;
-        padding: .38rem .7rem;
+        padding: 0.38rem 0.7rem;
         border: 1px solid var(--color-border);
         border-radius: var(--radius-full);
         background: var(--color-surface);
         color: var(--color-text);
-        font-size: .82rem;
+        font-size: 0.82rem;
         font-weight: 850;
       }
 
       .trust-badges--compact li {
         min-height: 2rem;
-        padding: .3rem .6rem;
-        font-size: .78rem;
+        padding: 0.3rem 0.6rem;
+        font-size: 0.78rem;
       }
 
       .footer-column {
         display: grid;
-        gap: .55rem;
+        gap: 0.55rem;
       }
 
       .footer-column h2,
       .footer-privacy-card h2 {
-        margin: 0 0 .35rem;
+        margin: 0 0 0.35rem;
         color: var(--color-text);
-        font-size: .92rem;
-        letter-spacing: .02em;
+        font-size: 0.92rem;
+        letter-spacing: 0.02em;
         text-transform: uppercase;
       }
 
@@ -691,7 +755,9 @@ const navLabels = {
         color: var(--color-text-muted);
         font-weight: 760;
         text-decoration: none;
-        transition: color var(--transition-base), transform var(--transition-base);
+        transition:
+          color var(--transition-base),
+          transform var(--transition-base);
       }
 
       .footer-column a:hover {
@@ -725,7 +791,7 @@ const navLabels = {
         justify-content: space-between;
         gap: var(--space-3);
         padding-top: var(--space-5);
-        font-size: .9rem;
+        font-size: 0.9rem;
       }
 
       @media (max-width: 1100px) {
@@ -734,17 +800,17 @@ const navLabels = {
         }
 
         .header-right {
-          gap: .65rem;
+          gap: 0.65rem;
         }
 
         .primary-nav {
-          gap: .2rem;
+          gap: 0.2rem;
         }
 
         .primary-nav a,
         .nav-dropdown summary {
-          padding-inline: .55rem;
-          font-size: .9rem;
+          padding-inline: 0.55rem;
+          font-size: 0.9rem;
         }
 
         .site-footer__inner {
@@ -766,7 +832,7 @@ const navLabels = {
           grid-template-columns: minmax(0, 1fr) auto;
           align-items: center;
           gap: var(--space-3);
-          padding-block: .55rem;
+          padding-block: 0.55rem;
           position: relative;
         }
 
@@ -790,7 +856,7 @@ const navLabels = {
 
         .header-right {
           position: absolute;
-          top: calc(100% + .45rem);
+          top: calc(100% + 0.45rem);
           left: 0;
           right: 0;
           z-index: var(--z-dropdown);
@@ -804,9 +870,11 @@ const navLabels = {
           box-shadow: var(--shadow-md);
           opacity: 0;
           pointer-events: none;
-          transform: translateY(-.4rem) scale(.98);
+          transform: translateY(-0.4rem) scale(0.98);
           transform-origin: top center;
-          transition: opacity var(--transition-base), transform var(--transition-base);
+          transition:
+            opacity var(--transition-base),
+            transform var(--transition-base);
         }
 
         .is-menu-open .header-right {
@@ -818,7 +886,7 @@ const navLabels = {
         .primary-nav {
           display: grid;
           grid-template-columns: 1fr;
-          gap: .35rem;
+          gap: 0.35rem;
           width: 100%;
         }
 
@@ -828,7 +896,7 @@ const navLabels = {
           justify-content: flex-start;
           padding-inline: var(--space-4);
           border-radius: var(--radius-md);
-          font-size: .96rem;
+          font-size: 0.96rem;
           background: var(--color-surface-soft);
         }
 
@@ -836,7 +904,7 @@ const navLabels = {
           position: static;
           transform: none;
           min-width: 0;
-          margin-top: .35rem;
+          margin-top: 0.35rem;
           box-shadow: none;
         }
 
@@ -860,7 +928,7 @@ const navLabels = {
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          gap: .5rem;
+          gap: 0.5rem;
           border: 1px solid var(--color-border);
           background: var(--color-surface-soft);
           border-radius: var(--radius-md);
@@ -879,7 +947,7 @@ const navLabels = {
 
         .language-nav {
           align-self: stretch;
-          padding: .25rem;
+          padding: 0.25rem;
           border: 1px solid var(--color-border);
           border-radius: var(--radius-md);
           background: var(--color-surface-soft);
@@ -887,8 +955,8 @@ const navLabels = {
 
         .language-nav a {
           min-height: 2.35rem;
-          padding-inline: .75rem;
-          border-radius: calc(var(--radius-md) - .25rem);
+          padding-inline: 0.75rem;
+          border-radius: calc(var(--radius-md) - 0.25rem);
         }
       }
 

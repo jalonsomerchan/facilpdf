@@ -37,9 +37,10 @@
   onMount(() => {
     currentLang = document.documentElement.lang === 'en' ? 'en' : 'es';
     privacyHref = `/${currentLang}/privacidad`;
-    privacyText = currentLang === 'en'
-      ? 'Files are processed in this browser. View privacy'
-      : 'Tus archivos se procesan en este navegador. Ver privacidad';
+    privacyText =
+      currentLang === 'en'
+        ? 'Files are processed in this browser. View privacy'
+        : 'Tus archivos se procesan en este navegador. Ver privacidad';
 
     if (!acceptTransfers) return;
 
@@ -47,9 +48,10 @@
       try {
         const transfer = await consumePendingPdfTransfer();
         if (transfer?.file) {
-          selectedLabel = currentLang === 'en'
-            ? `Imported from ${transfer.source}: ${transfer.file.name}`
-            : `Importado desde ${transfer.source}: ${transfer.file.name}`;
+          selectedLabel =
+            currentLang === 'en'
+              ? `Imported from ${transfer.source}: ${transfer.file.name}`
+              : `Importado desde ${transfer.source}: ${transfer.file.name}`;
           await processFiles([transfer.file]);
         }
       } catch {
@@ -117,7 +119,10 @@
 
   function isPdf(file: File) {
     const lowerName = file.name.toLowerCase();
-    return acceptedTypes.includes(file.type) || acceptedExtensions.some((extension) => lowerName.endsWith(extension));
+    return (
+      acceptedTypes.includes(file.type) ||
+      acceptedExtensions.some((extension) => lowerName.endsWith(extension))
+    );
   }
 </script>
 
@@ -160,6 +165,8 @@
   type="file"
   {accept}
   {multiple}
+  tabindex="-1"
+  aria-hidden="true"
   aria-describedby={helpId}
   aria-label={title}
   on:change={handleInputChange}
@@ -191,7 +198,11 @@
     cursor: pointer;
     text-align: center;
     font: inherit;
-    transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+    transition:
+      transform 180ms ease,
+      border-color 180ms ease,
+      background 180ms ease,
+      box-shadow 180ms ease;
   }
 
   .pdf-dropzone:hover,
@@ -326,15 +337,59 @@
     white-space: nowrap;
   }
 
+  :global([data-theme='dark']) .pdf-dropzone {
+    border-color: var(--color-border-strong);
+    background:
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--color-surface) 94%, transparent),
+        color-mix(in srgb, var(--color-surface-soft) 88%, transparent)
+      ),
+      radial-gradient(circle at center, var(--color-primary-soft), transparent 48%);
+    color: var(--color-text);
+  }
+
+  :global([data-theme='dark']) .pdf-dropzone:hover,
+  :global([data-theme='dark']) .pdf-dropzone:focus-visible,
+  :global([data-theme='dark']) .pdf-dropzone--active {
+    border-color: var(--color-primary);
+  }
+
+  :global([data-theme='dark']) .pdf-dropzone__icon-card {
+    background: var(--color-surface-raised);
+    color: var(--color-primary);
+  }
+
+  :global([data-theme='dark']) .pdf-dropzone__copy span,
+  :global([data-theme='dark']) .pdf-dropzone__copy small,
+  :global([data-theme='dark']) .pdf-dropzone__privacy {
+    color: var(--color-text-muted);
+  }
+
+  :global([data-theme='dark']) .pdf-dropzone__privacy a {
+    color: var(--color-primary);
+  }
+
   @keyframes pdf-dropzone-float {
-    0%, 100% { transform: translateY(0) rotate(8deg); }
-    50% { transform: translateY(-6px) rotate(5deg); }
+    0%,
+    100% {
+      transform: translateY(0) rotate(8deg);
+    }
+    50% {
+      transform: translateY(-6px) rotate(5deg);
+    }
   }
 
   @keyframes pdf-dropzone-pop {
-    0% { transform: scale(0.9) rotate(8deg); }
-    55% { transform: scale(1.08) rotate(2deg); }
-    100% { transform: scale(1) rotate(8deg); }
+    0% {
+      transform: scale(0.9) rotate(8deg);
+    }
+    55% {
+      transform: scale(1.08) rotate(2deg);
+    }
+    100% {
+      transform: scale(1) rotate(8deg);
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {

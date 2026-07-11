@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'facilpdf-static-v1';
+const CACHE_VERSION = 'facilpdf-static-v2';
 const APP_SHELL = [
   '/',
   '/es',
@@ -14,7 +14,8 @@ const USER_FILE_EXTENSIONS = /\.(pdf|zip|png|jpe?g|webp|txt)$/i;
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_VERSION)
+    caches
+      .open(CACHE_VERSION)
       .then((cache) => cache.addAll(APP_SHELL))
       .then(() => self.skipWaiting()),
   );
@@ -22,8 +23,11 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_VERSION).map((key) => caches.delete(key))))
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.filter((key) => key !== CACHE_VERSION).map((key) => caches.delete(key))),
+      )
       .then(() => self.clients.claim()),
   );
 });
@@ -44,7 +48,9 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy));
           return response;
         })
-        .catch(() => caches.match(request).then((cached) => cached || caches.match('/offline.html'))),
+        .catch(() =>
+          caches.match(request).then((cached) => cached || caches.match('/offline.html')),
+        ),
     );
     return;
   }
@@ -54,9 +60,10 @@ self.addEventListener('fetch', (event) => {
       if (cached) return cached;
 
       return fetch(request).then((response) => {
-        const isStaticAsset = ['style', 'script', 'font', 'image'].includes(request.destination)
-          || url.pathname.startsWith('/_astro/')
-          || url.pathname.endsWith('.webmanifest');
+        const isStaticAsset =
+          ['style', 'script', 'font', 'image'].includes(request.destination) ||
+          url.pathname.startsWith('/_astro/') ||
+          url.pathname.endsWith('.webmanifest');
 
         if (response.ok && isStaticAsset) {
           const copy = response.clone();

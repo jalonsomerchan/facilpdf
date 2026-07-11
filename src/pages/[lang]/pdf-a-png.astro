@@ -1,0 +1,47 @@
+---
+import ToolPageLayout from '../../layouts/ToolPageLayout.astro';
+import ExtractImagesPdfTool from '../../components/ExtractImagesPdfTool.svelte';
+import { getLocalizedPath, isLang, type Lang } from '../../i18n/utils';
+import { locales } from '../../i18n/ui';
+
+export function getStaticPaths() {
+  return locales.map((lang) => ({ params: { lang } }));
+}
+
+const { lang } = Astro.params;
+if (!isLang(lang)) return Astro.redirect(getLocalizedPath('es', 'pdf-a-png'));
+
+const copy = {
+  es: {
+    title: 'Convertir PDF a PNG online gratis y privado',
+    description: 'Convierte páginas PDF en imágenes PNG nítidas desde el navegador, sin subir documentos a servidores.',
+    badge: 'PDF a PNG · Sin pérdida · Procesamiento local',
+    h1: 'Convertir PDF a PNG',
+    lead: 'Transforma todas las páginas o una selección en imágenes PNG de alta calidad y descarga el resultado individualmente o en ZIP.',
+    steps: [{ text: 'Carga el PDF desde tu dispositivo.' }, { text: 'Elige las páginas y ajusta la resolución.' }, { text: 'Exporta y descarga el PNG o el archivo ZIP.' }],
+    infoBlocks: [
+      { title: 'Calidad sin pérdida', text: 'PNG conserva bordes, textos y gráficos nítidos, por lo que es adecuado para capturas, documentos y presentaciones.' },
+      { title: 'Privacidad real', text: 'El renderizado ocurre en tu navegador con pdf.js; el documento no se envía a FácilPDF.' },
+    ],
+    footer: 'Conversión PDF a PNG local, privada y sin instalación.',
+  },
+  en: {
+    title: 'Convert PDF to PNG online free and privately',
+    description: 'Convert PDF pages into crisp PNG images in your browser without uploading documents to servers.',
+    badge: 'PDF to PNG · Lossless · Local processing',
+    h1: 'Convert PDF to PNG',
+    lead: 'Turn every page or a selection into high-quality PNG images and download one file or a ZIP archive.',
+    steps: [{ text: 'Load the PDF from your device.' }, { text: 'Choose pages and adjust resolution.' }, { text: 'Export and download the PNG or ZIP file.' }],
+    infoBlocks: [
+      { title: 'Lossless quality', text: 'PNG keeps edges, text and graphics crisp, making it a good fit for screenshots, documents and presentations.' },
+      { title: 'Real privacy', text: 'Rendering happens in your browser with pdf.js; the document is not sent to FácilPDF.' },
+    ],
+    footer: 'Local, private PDF to PNG conversion with no installation.',
+  },
+} as const;
+const pageCopy = copy[lang as Lang];
+---
+
+<ToolPageLayout lang={lang} title={pageCopy.title} description={pageCopy.description} path="pdf-a-png" toolId="pdf-to-png" badge={pageCopy.badge} h1={pageCopy.h1} lead={pageCopy.lead} steps={pageCopy.steps} infoBlocks={pageCopy.infoBlocks} footer={pageCopy.footer}>
+  <ExtractImagesPdfTool client:load lang={lang} defaultFormat="png" lockedFormat="png" />
+</ToolPageLayout>

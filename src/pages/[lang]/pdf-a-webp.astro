@@ -1,0 +1,47 @@
+---
+import ToolPageLayout from '../../layouts/ToolPageLayout.astro';
+import ExtractImagesPdfTool from '../../components/ExtractImagesPdfTool.svelte';
+import { getLocalizedPath, isLang, type Lang } from '../../i18n/utils';
+import { locales } from '../../i18n/ui';
+
+export function getStaticPaths() {
+  return locales.map((lang) => ({ params: { lang } }));
+}
+
+const { lang } = Astro.params;
+if (!isLang(lang)) return Astro.redirect(getLocalizedPath('es', 'pdf-a-webp'));
+
+const copy = {
+  es: {
+    title: 'Convertir PDF a WebP online gratis y privado',
+    description: 'Convierte páginas PDF a imágenes WebP ligeras y ajusta su calidad en el navegador, sin subidas.',
+    badge: 'PDF a WebP · Imágenes ligeras · Sin subidas',
+    h1: 'Convertir PDF a WebP',
+    lead: 'Crea imágenes WebP optimizadas desde todas las páginas o una selección, controlando resolución y calidad antes de descargar.',
+    steps: [{ text: 'Selecciona el PDF que quieres convertir.' }, { text: 'Indica páginas, resolución y calidad WebP.' }, { text: 'Genera y descarga una imagen o un ZIP.' }],
+    infoBlocks: [
+      { title: 'Pensado para web', text: 'WebP suele producir archivos más ligeros que PNG y resulta útil para publicar previsualizaciones o páginas de documentos.' },
+      { title: 'Todo queda en el dispositivo', text: 'La conversión usa las capacidades del navegador y no sube el PDF ni las imágenes generadas.' },
+    ],
+    footer: 'Conversión PDF a WebP local y privada.',
+  },
+  en: {
+    title: 'Convert PDF to WebP online free and privately',
+    description: 'Convert PDF pages to lightweight WebP images and adjust quality in your browser without uploads.',
+    badge: 'PDF to WebP · Lightweight images · No uploads',
+    h1: 'Convert PDF to WebP',
+    lead: 'Create optimized WebP images from every page or a selection, controlling resolution and quality before download.',
+    steps: [{ text: 'Select the PDF you want to convert.' }, { text: 'Choose pages, resolution and WebP quality.' }, { text: 'Generate and download one image or a ZIP.' }],
+    infoBlocks: [
+      { title: 'Made for the web', text: 'WebP often creates lighter files than PNG and works well for publishing document pages or previews.' },
+      { title: 'Everything stays on device', text: 'Conversion uses browser capabilities and uploads neither the PDF nor the generated images.' },
+    ],
+    footer: 'Local and private PDF to WebP conversion.',
+  },
+} as const;
+const pageCopy = copy[lang as Lang];
+---
+
+<ToolPageLayout lang={lang} title={pageCopy.title} description={pageCopy.description} path="pdf-a-webp" toolId="pdf-to-webp" badge={pageCopy.badge} h1={pageCopy.h1} lead={pageCopy.lead} steps={pageCopy.steps} infoBlocks={pageCopy.infoBlocks} footer={pageCopy.footer}>
+  <ExtractImagesPdfTool client:load lang={lang} defaultFormat="webp" lockedFormat="webp" />
+</ToolPageLayout>

@@ -4,7 +4,7 @@ import ToolIcon from '../../components/ToolIcon.astro';
 import ToolSearch from '../../components/ToolSearch.svelte';
 import { getLocalizedPath, isLang, useTranslations, type Lang } from '../../i18n/utils';
 import { locales } from '../../i18n/ui';
-import { pdfToolCategories, pdfTools, toolStatusLabels } from '../../data/tools';
+import { pdfToolCategories, pdfTools, toolStatusLabels, type ToolStatus } from '../../data/tools';
 
 export function getStaticPaths() {
   return locales.map((lang) => ({ params: { lang } }));
@@ -23,67 +23,144 @@ const allLabel = currentLang === 'es' ? 'Todos' : 'All';
 const toolsCountLabel = currentLang === 'es' ? 'herramientas' : 'tools';
 const openToolLabel = currentLang === 'es' ? 'Abrir herramienta' : 'Open tool';
 const soonLabel = currentLang === 'es' ? 'Ver ficha' : 'View page';
-const heroTitle = currentLang === 'es' ? 'Herramientas PDF gratis, rápidas y privadas' : 'Free, fast and private PDF tools';
-const heroLead = currentLang === 'es'
-  ? 'Une, divide, comprime, convierte y organiza PDFs desde el navegador. Sin instalación, sin esperas y con procesamiento local siempre que la herramienta lo permite.'
-  : 'Merge, split, compress, convert and organize PDFs in your browser. No installation, no waiting and local processing whenever the tool supports it.';
-const heroCopy = currentLang === 'es'
-  ? {
-      badge: 'Privado por diseño',
-      primaryCta: 'Ver herramientas',
-      secondaryCta: 'Cómo protegemos tus PDF',
-    }
-  : {
-      badge: 'Private by design',
-      primaryCta: 'Browse tools',
-      secondaryCta: 'How we protect your PDFs',
-    };
+const guideLabel = currentLang === 'es' ? 'Leer guía' : 'Read guide';
+const heroTitle =
+  currentLang === 'es'
+    ? 'Herramientas PDF gratis, rápidas y privadas'
+    : 'Free, fast and private PDF tools';
+const heroLead =
+  currentLang === 'es'
+    ? 'Une, divide, comprime, convierte y organiza PDFs desde el navegador. Sin instalación, sin esperas y con procesamiento local siempre que la herramienta lo permite.'
+    : 'Merge, split, compress, convert and organize PDFs in your browser. No installation, no waiting and local processing whenever the tool supports it.';
+const heroCopy =
+  currentLang === 'es'
+    ? {
+        badge: 'Privado por diseño',
+        primaryCta: 'Ver herramientas',
+        secondaryCta: 'Cómo protegemos tus PDF',
+      }
+    : {
+        badge: 'Private by design',
+        primaryCta: 'Browse tools',
+        secondaryCta: 'How we protect your PDFs',
+      };
 const multitool = pdfTools.find((tool) => tool.id === 'pdf-multitool');
 const multitoolHref = getLocalizedPath(currentLang, multitool?.route ?? 'multiherramienta-pdf');
-const multitoolCopy = currentLang === 'es'
-  ? {
-      eyebrow: 'Herramienta principal',
-      title: 'Empieza con la multiherramienta PDF',
-      text: 'Una sola pantalla para unir, reordenar, rotar, eliminar páginas, extraer una selección y añadir texto visible a tus PDFs.',
-      cta: 'Abrir multiherramienta',
-      badge1: 'Unir PDF',
-      badge2: 'Rotar y ordenar',
-      badge3: 'Eliminar páginas',
-      badge4: 'Extraer selección',
-    }
-  : {
-      eyebrow: 'Main tool',
-      title: 'Start with the PDF multitool',
-      text: 'One screen to merge, reorder, rotate, delete pages, extract a selection and add visible text to your PDFs.',
-      cta: 'Open multitool',
-      badge1: 'Merge PDF',
-      badge2: 'Rotate and reorder',
-      badge3: 'Delete pages',
-      badge4: 'Extract selection',
-    };
-const searchCopy = currentLang === 'es'
-  ? {
-      label: 'Buscar herramientas',
-      placeholder: 'Buscar por nombre, descripción o palabra clave…',
-      empty: 'No hay herramientas que coincidan con tu búsqueda.',
-    }
-  : {
-      label: 'Search tools',
-      placeholder: 'Search by name, description or keyword…',
-      empty: 'No tools match your search.',
-    };
+const multitoolCopy =
+  currentLang === 'es'
+    ? {
+        eyebrow: 'Herramienta principal',
+        title: 'Empieza con la multiherramienta PDF',
+        text: 'Una sola pantalla para unir, reordenar, rotar, eliminar páginas, extraer una selección y añadir texto visible a tus PDFs.',
+        cta: 'Abrir multiherramienta',
+        badge1: 'Unir PDF',
+        badge2: 'Rotar y ordenar',
+        badge3: 'Eliminar páginas',
+        badge4: 'Extraer selección',
+      }
+    : {
+        eyebrow: 'Main tool',
+        title: 'Start with the PDF multitool',
+        text: 'One screen to merge, reorder, rotate, delete pages, extract a selection and add visible text to your PDFs.',
+        cta: 'Open multitool',
+        badge1: 'Merge PDF',
+        badge2: 'Rotate and reorder',
+        badge3: 'Delete pages',
+        badge4: 'Extract selection',
+      };
+const searchCopy =
+  currentLang === 'es'
+    ? {
+        label: 'Buscar herramientas',
+        placeholder: 'Buscar por nombre, descripción o palabra clave…',
+        empty: 'No hay herramientas que coincidan con tu búsqueda.',
+      }
+    : {
+        label: 'Search tools',
+        placeholder: 'Search by name, description or keyword…',
+        empty: 'No tools match your search.',
+      };
+const quickToolIds = [
+  'merge-pdf',
+  'compress-pdf',
+  'images-to-pdf',
+  'pdf-to-jpg',
+  'sign-pdf',
+  'resize-pdf',
+];
+const quickTools = quickToolIds
+  .map((id) => pdfTools.find((tool) => tool.id === id))
+  .filter(Boolean);
+const quickTitle = currentLang === 'es' ? 'Accesos rápidos' : 'Quick actions';
+const quickLead =
+  currentLang === 'es'
+    ? 'Abre directamente las tareas más habituales.'
+    : 'Open the most common tasks directly.';
+const homeUrl = new URL(getLocalizedPath(currentLang), Astro.site).toString();
+const homeStructuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'FácilPDF',
+    url: homeUrl,
+    inLanguage: currentLang,
+    description: t('seo.home.description'),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: currentLang === 'es' ? 'Herramientas PDF de FácilPDF' : 'FácilPDF PDF tools',
+    numberOfItems: pdfTools.length,
+    itemListElement: pdfTools.map((tool, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: tool.title[currentLang],
+      url: new URL(getLocalizedPath(currentLang, tool.route), Astro.site).toString(),
+    })),
+  },
+];
 ---
 
-<BaseLayout lang={currentLang} title={t('seo.home.title')} description={t('seo.home.description')}>
+<BaseLayout
+  lang={currentLang}
+  title={t('seo.home.title')}
+  description={t('seo.home.description')}
+  structuredData={homeStructuredData}
+>
   <section class="home-hero home-hero--product" aria-labelledby="home-title">
     <span class="home-hero__eyebrow">{heroCopy.badge}</span>
     <h1 id="home-title">{heroTitle}</h1>
     <p class="home-hero__lead">{heroLead}</p>
     <div class="home-hero__actions">
-      <a class="home-hero__cta home-hero__cta--primary" href="#tools-title">{heroCopy.primaryCta}</a>
-      <a class="home-hero__cta home-hero__cta--secondary" href={getLocalizedPath(currentLang, 'privacidad')}>{heroCopy.secondaryCta}</a>
+      <a class="home-hero__cta home-hero__cta--primary" href="#tools-title">{heroCopy.primaryCta}</a
+      >
+      <a
+        class="home-hero__cta home-hero__cta--secondary"
+        href={getLocalizedPath(currentLang, 'privacidad')}>{heroCopy.secondaryCta}</a
+      >
     </div>
   </section>
+
+  <nav class="quick-tools" aria-labelledby="quick-tools-title">
+    <div class="quick-tools__copy">
+      <h2 id="quick-tools-title">{quickTitle}</h2><p>{quickLead}</p>
+    </div>
+    <div class="quick-tools__list">
+      {
+        quickTools.map(
+          (tool) =>
+            tool && (
+              <a href={getLocalizedPath(currentLang, tool.route)}>
+                <>
+                  <ToolIcon name={tool.id} />
+                  <span>{tool.title[currentLang]}</span>
+                </>
+              </a>
+            ),
+        )
+      }
+    </div>
+  </nav>
 
   <section class="featured-multitool" aria-labelledby="featured-multitool-title">
     <div class="featured-multitool__content">
@@ -108,45 +185,80 @@ const searchCopy = currentLang === 'es'
   <section class="tools-catalog" aria-labelledby="tools-title">
     <div class="tools-catalog__header">
       <div>
-        <h2 id="tools-title">{currentLang === 'es' ? 'Todas las herramientas PDF' : 'All PDF tools'}</h2>
-        <p>{currentLang === 'es' ? 'Busca por nombre o palabra clave, filtra por categoría y abre la herramienta que necesites.' : 'Search by name or keyword, filter by category and open the tool you need.'}</p>
+        <h2 id="tools-title">
+          {currentLang === 'es' ? 'Todas las herramientas PDF' : 'All PDF tools'}
+        </h2>
+        <p>
+          {
+            currentLang === 'es'
+              ? 'Busca por nombre o palabra clave, filtra por categoría y abre la herramienta que necesites.'
+              : 'Search by name or keyword, filter by category and open the tool you need.'
+          }
+        </p>
       </div>
       <span class="tools-count" data-tools-count>{totalTools} {toolsCountLabel}</span>
     </div>
 
-    <ToolSearch client:load lang={currentLang} categories={pdfToolCategories} allLabel={allLabel} toolsLabel={toolsCountLabel} searchLabel={searchCopy.label} searchPlaceholder={searchCopy.placeholder} emptyText={searchCopy.empty} />
+    <ToolSearch
+      client:load
+      lang={currentLang}
+      categories={pdfToolCategories}
+      allLabel={allLabel}
+      toolsLabel={toolsCountLabel}
+      searchLabel={searchCopy.label}
+      searchPlaceholder={searchCopy.placeholder}
+      emptyText={searchCopy.empty}
+    />
 
-    <div class="tools-grid" data-tools-grid>
-      {pdfTools.map((tool) => {
-        const category = pdfToolCategories.find((item) => item.id === tool.category)!;
-        const href = getLocalizedPath(currentLang, tool.route);
-        const isAvailable = tool.status === 'available';
-        const actionLabel = isAvailable ? openToolLabel : soonLabel;
-        const searchText = [tool.title[currentLang], tool.description[currentLang], category.title[currentLang], tool.keywords.join(' ')].join(' ');
+    <div class="tools-grid" id="tools-catalog-results" data-tools-grid aria-live="polite">
+      {
+        pdfTools.map((tool) => {
+          const category = pdfToolCategories.find((item) => item.id === tool.category)!;
+          const href = getLocalizedPath(currentLang, tool.route);
+          const status = tool.status as ToolStatus;
+          const isNavigable = status !== 'soon';
+          const actionLabel =
+            status === 'guide' ? guideLabel : status === 'soon' ? soonLabel : openToolLabel;
+          const searchText = [
+            tool.title[currentLang],
+            tool.description[currentLang],
+            category.title[currentLang],
+            tool.keywords.join(' '),
+          ].join(' ');
 
-        return (
-          <a
-            class:list={['home-tool-card', `home-tool-card--${tool.category}`, { 'home-tool-card--disabled': !isAvailable, 'home-tool-card--featured': tool.id === 'pdf-multitool' }]}
-            href={href}
-            data-tool-card
-            data-tool-category={tool.category}
-            data-tool-status={tool.status}
-            data-tool-search-text={searchText}
-            aria-label={`${tool.title[currentLang]} · ${category.title[currentLang]}`}
-          >
-            <span class="home-tool-card__icon" aria-hidden="true">
-              <ToolIcon name={tool.id} size="lg" />
-            </span>
-            <span class="home-tool-card__category">{category.title[currentLang]}</span>
-            <strong>{tool.title[currentLang]}</strong>
-            <span class="home-tool-card__description">{tool.description[currentLang]}</span>
-            <span class="home-tool-card__footer">
-              <span class:list={['status-pill', `status-pill--${tool.status}`]}>{toolStatusLabels[tool.status][currentLang]}</span>
-              <span class="home-tool-card__action">{actionLabel}</span>
-            </span>
-          </a>
-        );
-      })}
+          return (
+            <a
+              class:list={[
+                'home-tool-card',
+                `home-tool-card--${tool.category}`,
+                {
+                  'home-tool-card--disabled': !isNavigable,
+                  'home-tool-card--featured': tool.id === 'pdf-multitool',
+                },
+              ]}
+              href={href}
+              data-tool-card
+              data-tool-category={tool.category}
+              data-tool-status={tool.status}
+              data-tool-search-text={searchText}
+              aria-label={`${tool.title[currentLang]} · ${category.title[currentLang]}`}
+            >
+              <span class="home-tool-card__icon" aria-hidden="true">
+                <ToolIcon name={tool.id} size="lg" />
+              </span>
+              <span class="home-tool-card__category">{category.title[currentLang]}</span>
+              <strong>{tool.title[currentLang]}</strong>
+              <span class="home-tool-card__description">{tool.description[currentLang]}</span>
+              <span class="home-tool-card__footer">
+                <span class:list={['status-pill', `status-pill--${tool.status}`]}>
+                  {toolStatusLabels[tool.status][currentLang]}
+                </span>
+                <span class="home-tool-card__action">{actionLabel}</span>
+              </span>
+            </a>
+          );
+        })
+      }
     </div>
   </section>
 
@@ -168,7 +280,18 @@ const searchCopy = currentLang === 'es'
     }
 
     if ('serviceWorker' in navigator) {
+      const isLocalDevelopment = ['localhost', '127.0.0.1', '::1'].includes(
+        window.location.hostname,
+      );
+
       window.addEventListener('load', () => {
+        if (isLocalDevelopment) {
+          navigator.serviceWorker.getRegistrations().then((registrations) => {
+            registrations.forEach((registration) => registration.unregister());
+          });
+          return;
+        }
+
         navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(() => {
           // PWA registration must never block the PDF tools.
         });
@@ -177,7 +300,255 @@ const searchCopy = currentLang === 'es'
   </script>
 
   <style>
-    .home-hero--product{padding-bottom:clamp(2rem,4vw,3rem)}.home-hero__actions{display:flex;flex-wrap:wrap;justify-content:center;gap:.75rem;margin-top:.35rem}.home-hero__cta{display:inline-flex;min-height:3rem;align-items:center;justify-content:center;padding:.85rem 1.2rem;border-radius:999px;font-weight:950;text-align:center;text-decoration:none;transition:transform var(--transition-fast,120ms ease),box-shadow var(--transition-base,180ms ease),background var(--transition-base,180ms ease)}.home-hero__cta:hover,.home-hero__cta:focus-visible{transform:translateY(-1px)}.home-hero__cta--primary{background:linear-gradient(135deg,var(--color-primary,#2563eb),var(--color-secondary,#7c3aed));color:#fff;box-shadow:var(--shadow-sm,0 4px 12px rgb(15 23 42 / .08))}.home-hero__cta--primary:hover,.home-hero__cta--primary:focus-visible{color:#fff;box-shadow:var(--shadow-md,0 12px 32px rgb(15 23 42 / .12))}.home-hero__cta--secondary{border:1px solid var(--color-border,#e2e8f0);background:var(--color-surface,#fff);color:var(--color-text,#0f172a)}.featured-multitool{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:clamp(1.2rem,3vw,2rem);align-items:center;margin:clamp(1.5rem,4vw,3rem) 0;padding:clamp(1.4rem,4vw,2.4rem);border:1px solid var(--color-border,#e2e8f0);border-radius:var(--radius-2xl,1.5rem);background:radial-gradient(circle at 10% 0%,color-mix(in srgb,var(--color-primary,#2563eb) 16%,transparent),transparent 18rem),linear-gradient(135deg,var(--color-surface-raised,#fff),var(--color-surface-soft,#f1f5f9));box-shadow:var(--shadow-md,0 18px 48px rgb(15 23 42 / .12))}.featured-multitool__content{display:grid;gap:.85rem}.featured-multitool__eyebrow{width:fit-content;padding:.35rem .7rem;border-radius:999px;background:var(--color-primary-soft,#dbeafe);color:var(--color-primary,#2563eb);font-size:.78rem;font-weight:950;letter-spacing:.08em;text-transform:uppercase}.featured-multitool h2,.featured-multitool p{margin:0}.featured-multitool h2{color:var(--color-text,#0f172a);font-size:clamp(1.7rem,4vw,3rem);line-height:.98;letter-spacing:-.055em}.featured-multitool p{max-width:48rem;color:var(--color-text-muted,#475569);font-size:clamp(1rem,1.8vw,1.18rem)}.featured-multitool__badges{display:flex;flex-wrap:wrap;gap:.55rem}.featured-multitool__badges span{padding:.42rem .75rem;border:1px solid var(--color-border,#e2e8f0);border-radius:999px;background:var(--color-surface,#fff);color:var(--color-text,#0f172a);font-weight:850;font-size:.88rem}.featured-multitool__cta{display:inline-flex;width:fit-content;min-height:3rem;align-items:center;justify-content:center;padding:.85rem 1.2rem;border-radius:999px;background:linear-gradient(135deg,var(--color-primary,#2563eb),var(--color-secondary,#7c3aed));color:#fff;font-weight:950;text-decoration:none;box-shadow:var(--shadow-sm,0 4px 12px rgb(15 23 42 / .08))}.featured-multitool__visual{display:grid;width:clamp(8rem,18vw,13rem);aspect-ratio:1;place-items:center;border-radius:2rem;background:var(--color-surface,#fff);box-shadow:var(--shadow-lg,0 24px 70px rgb(15 23 42 / .18));transform:rotate(3deg);color:var(--color-primary,#2563eb)}.featured-multitool__visual strong{color:var(--color-text,#0f172a);font-size:clamp(1.5rem,4vw,2.6rem);line-height:1}.featured-multitool__visual small{color:var(--color-text-muted,#475569);font-weight:850;text-transform:uppercase;letter-spacing:.08em}.home-tool-card--featured{border-color:color-mix(in srgb,var(--color-primary,#2563eb) 45%,var(--color-border,#e2e8f0));box-shadow:0 18px 48px rgb(37 99 235 / .16)}@media(max-width:760px){.home-hero__actions,.home-hero__cta{width:100%}.featured-multitool{grid-template-columns:1fr}.featured-multitool__visual{width:min(100%,12rem);justify-self:start}.featured-multitool__cta{width:100%}}
+    .home-hero--product {
+      padding-bottom: clamp(2rem, 4vw, 3rem);
+    }
+    .home-hero__actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-top: 0.35rem;
+    }
+    .home-hero__cta {
+      display: inline-flex;
+      min-height: 3rem;
+      align-items: center;
+      justify-content: center;
+      padding: 0.85rem 1.2rem;
+      border-radius: 999px;
+      font-weight: 950;
+      text-align: center;
+      text-decoration: none;
+      transition:
+        transform var(--transition-fast, 120ms ease),
+        box-shadow var(--transition-base, 180ms ease),
+        background var(--transition-base, 180ms ease);
+    }
+    .home-hero__cta:hover,
+    .home-hero__cta:focus-visible {
+      transform: translateY(-1px);
+    }
+    .home-hero__cta--primary {
+      background: linear-gradient(
+        135deg,
+        var(--color-primary, #2563eb),
+        var(--color-secondary, #7c3aed)
+      );
+      color: #fff;
+      box-shadow: var(--shadow-sm, 0 4px 12px rgb(15 23 42 / 0.08));
+    }
+    .home-hero__cta--primary:hover,
+    .home-hero__cta--primary:focus-visible {
+      color: #fff;
+      box-shadow: var(--shadow-md, 0 12px 32px rgb(15 23 42 / 0.12));
+    }
+    .home-hero__cta--secondary {
+      border: 1px solid var(--color-border, #e2e8f0);
+      background: var(--color-surface, #fff);
+      color: var(--color-text, #0f172a);
+    }
+    .quick-tools {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 1rem;
+      align-items: center;
+      margin: 0 0 clamp(1.5rem, 4vw, 2.5rem);
+      padding: 1rem;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      background: var(--color-surface);
+      box-shadow: var(--shadow-sm);
+    }
+    .quick-tools__copy h2,
+    .quick-tools__copy p {
+      margin: 0;
+    }
+    .quick-tools__copy h2 {
+      color: var(--color-text);
+      font-size: 1rem;
+    }
+    .quick-tools__copy p {
+      color: var(--color-text-muted);
+      font-size: 0.85rem;
+    }
+    .quick-tools__list {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 0.55rem;
+    }
+    .quick-tools__list a {
+      display: flex;
+      min-height: 3rem;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      padding: 0.6rem;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      background: var(--color-surface-soft);
+      color: var(--color-text);
+      font-size: 0.86rem;
+      font-weight: 850;
+      text-align: center;
+      text-decoration: none;
+    }
+    .quick-tools__list a:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+    .featured-multitool {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: clamp(1.2rem, 3vw, 2rem);
+      align-items: center;
+      margin: clamp(1.5rem, 4vw, 3rem) 0;
+      padding: clamp(1.4rem, 4vw, 2.4rem);
+      border: 1px solid var(--color-border, #e2e8f0);
+      border-radius: var(--radius-2xl, 1.5rem);
+      background:
+        radial-gradient(
+          circle at 10% 0%,
+          color-mix(in srgb, var(--color-primary, #2563eb) 16%, transparent),
+          transparent 18rem
+        ),
+        linear-gradient(
+          135deg,
+          var(--color-surface-raised, #fff),
+          var(--color-surface-soft, #f1f5f9)
+        );
+      box-shadow: var(--shadow-md, 0 18px 48px rgb(15 23 42 / 0.12));
+    }
+    .featured-multitool__content {
+      display: grid;
+      gap: 0.85rem;
+    }
+    .featured-multitool__eyebrow {
+      width: fit-content;
+      padding: 0.35rem 0.7rem;
+      border-radius: 999px;
+      background: var(--color-primary-soft, #dbeafe);
+      color: var(--color-primary, #2563eb);
+      font-size: 0.78rem;
+      font-weight: 950;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .featured-multitool h2,
+    .featured-multitool p {
+      margin: 0;
+    }
+    .featured-multitool h2 {
+      color: var(--color-text, #0f172a);
+      font-size: clamp(1.7rem, 4vw, 3rem);
+      line-height: 0.98;
+      letter-spacing: -0.055em;
+    }
+    .featured-multitool p {
+      max-width: 48rem;
+      color: var(--color-text-muted, #475569);
+      font-size: clamp(1rem, 1.8vw, 1.18rem);
+    }
+    .featured-multitool__badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+    }
+    .featured-multitool__badges span {
+      padding: 0.42rem 0.75rem;
+      border: 1px solid var(--color-border, #e2e8f0);
+      border-radius: 999px;
+      background: var(--color-surface, #fff);
+      color: var(--color-text, #0f172a);
+      font-weight: 850;
+      font-size: 0.88rem;
+    }
+    .featured-multitool__cta {
+      display: inline-flex;
+      width: fit-content;
+      min-height: 3rem;
+      align-items: center;
+      justify-content: center;
+      padding: 0.85rem 1.2rem;
+      border-radius: 999px;
+      background: linear-gradient(
+        135deg,
+        var(--color-primary, #2563eb),
+        var(--color-secondary, #7c3aed)
+      );
+      color: #fff;
+      font-weight: 950;
+      text-decoration: none;
+      box-shadow: var(--shadow-sm, 0 4px 12px rgb(15 23 42 / 0.08));
+    }
+    .featured-multitool__visual {
+      display: grid;
+      width: clamp(8rem, 18vw, 13rem);
+      aspect-ratio: 1;
+      place-items: center;
+      border-radius: 2rem;
+      background: var(--color-surface, #fff);
+      box-shadow: var(--shadow-lg, 0 24px 70px rgb(15 23 42 / 0.18));
+      transform: rotate(3deg);
+      color: var(--color-primary, #2563eb);
+    }
+    .featured-multitool__visual strong {
+      color: var(--color-text, #0f172a);
+      font-size: clamp(1.5rem, 4vw, 2.6rem);
+      line-height: 1;
+    }
+    .featured-multitool__visual small {
+      color: var(--color-text-muted, #475569);
+      font-weight: 850;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .home-tool-card--featured {
+      border-color: color-mix(
+        in srgb,
+        var(--color-primary, #2563eb) 45%,
+        var(--color-border, #e2e8f0)
+      );
+      box-shadow: 0 18px 48px rgb(37 99 235 / 0.16);
+    }
+    .status-pill--guide {
+      background: var(--color-info-soft);
+      color: var(--color-info);
+    }
+    @media (max-width: 980px) {
+      .quick-tools {
+        grid-template-columns: 1fr;
+      }
+      .quick-tools__list {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+    }
+    @media (max-width: 760px) {
+      .home-hero__actions,
+      .home-hero__cta {
+        width: 100%;
+      }
+      .quick-tools__list {
+        display: flex;
+        overflow-x: auto;
+        padding-bottom: 0.35rem;
+        scroll-snap-type: x proximity;
+      }
+      .quick-tools__list a {
+        min-width: 9.5rem;
+        scroll-snap-align: start;
+      }
+      .featured-multitool {
+        grid-template-columns: 1fr;
+      }
+      .featured-multitool__visual {
+        width: min(100%, 12rem);
+        justify-self: start;
+      }
+      .featured-multitool__cta {
+        width: 100%;
+      }
+    }
   </style>
 
   <Fragment slot="footer">{t('footer.privacy')}</Fragment>

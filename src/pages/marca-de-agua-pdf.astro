@@ -1,3 +1,18 @@
 ---
-return Astro.redirect('/es/marca-de-agua-pdf');
+const target = '/es/marca-de-agua-pdf';
 ---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="robots" content="noindex,follow" />
+    <title>Marca de agua PDF · FácilPDF</title>
+    <link rel="canonical" href={new URL(target, Astro.site)} />
+    <meta http-equiv="refresh" content={`0; url=${target}`} />
+  </head>
+  <body>
+    <main><p>Redirigiendo a <a href={target}>Marca de agua PDF</a>…</p></main>
+  </body>
+</html>

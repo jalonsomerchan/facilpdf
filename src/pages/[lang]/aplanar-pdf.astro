@@ -1,0 +1,89 @@
+---
+import ToolPageLayout from '../../layouts/ToolPageLayout.astro';
+import FlattenPdfTool from '../../components/FlattenPdfTool.svelte';
+import { getLocalizedPath, isLang, type Lang } from '../../i18n/utils';
+import { locales } from '../../i18n/ui';
+
+export function getStaticPaths() {
+  return locales.map((lang) => ({ params: { lang } }));
+}
+const { lang } = Astro.params;
+if (!isLang(lang)) return Astro.redirect(getLocalizedPath('es', 'aplanar-pdf'));
+
+const copy = {
+  es: {
+    title: 'Aplanar PDF online: convertir campos en contenido fijo',
+    description:
+      'Aplana formularios AcroForm de un PDF en el navegador para convertir sus campos editables en contenido fijo, sin subir archivos.',
+    badge: 'Formularios PDF · AcroForm · Privado',
+    h1: 'Aplanar formularios PDF online',
+    lead: 'Convierte los campos editables compatibles de un formulario PDF en contenido fijo para compartir una copia final más difícil de modificar por accidente.',
+    steps: [
+      { title: 'Carga el formulario', text: 'Selecciona un PDF con campos AcroForm completados.' },
+      {
+        title: 'Comprueba los campos',
+        text: 'La herramienta indica cuántos campos compatibles ha detectado.',
+      },
+      {
+        title: 'Aplana y revisa',
+        text: 'Genera la copia fija y verifica visualmente todos los valores antes de descargarla.',
+      },
+    ],
+    info: [
+      {
+        title: 'Qué significa aplanar un PDF',
+        text: 'Los valores de los campos dejan de ser controles editables y pasan a formar parte del contenido visible de la página.',
+      },
+      {
+        title: 'Límites importantes',
+        text: 'No rompe contraseñas, no valida firmas digitales y no garantiza aplanar XFA dinámico ni todas las anotaciones posibles.',
+      },
+    ],
+    footer: 'Aplana solo formularios propios o que tengas permiso para modificar.',
+  },
+  en: {
+    title: 'Flatten PDF online: turn fields into fixed content',
+    description:
+      'Flatten AcroForm fields in a PDF in your browser to turn editable controls into fixed content without uploading files.',
+    badge: 'PDF forms · AcroForm · Private',
+    h1: 'Flatten PDF forms online',
+    lead: 'Turn compatible editable form fields into fixed page content so you can share a final copy that is harder to modify by accident.',
+    steps: [
+      { title: 'Upload the form', text: 'Select a completed PDF with AcroForm fields.' },
+      { title: 'Check the fields', text: 'The tool reports how many compatible fields it found.' },
+      {
+        title: 'Flatten and review',
+        text: 'Generate the fixed copy and visually verify every value before downloading it.',
+      },
+    ],
+    info: [
+      {
+        title: 'What flattening means',
+        text: 'Field values stop being editable controls and become part of the visible page content.',
+      },
+      {
+        title: 'Important limits',
+        text: 'This does not break passwords, validate digital signatures or guarantee support for dynamic XFA and every annotation type.',
+      },
+    ],
+    footer: 'Only flatten forms you own or have permission to modify.',
+  },
+} as const;
+const page = copy[lang as Lang];
+---
+
+<ToolPageLayout
+  lang={lang}
+  title={page.title}
+  description={page.description}
+  path="aplanar-pdf"
+  toolId="flatten-pdf"
+  badge={page.badge}
+  h1={page.h1}
+  lead={page.lead}
+  steps={page.steps}
+  infoBlocks={page.info}
+  footer={page.footer}
+>
+  <FlattenPdfTool client:load lang={lang} />
+</ToolPageLayout>
