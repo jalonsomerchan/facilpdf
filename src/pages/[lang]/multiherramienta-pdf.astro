@@ -19,38 +19,60 @@ const copy = {
   es: {
     title: 'Multiherramienta PDF online gratis y privada',
     description:
-      'Edita PDFs desde una sola herramienta: unir, reordenar, rotar, eliminar, dividir por selección y añadir texto visible sin subir archivos.',
-    badge: 'La herramienta principal · Todo en uno · 100% navegador',
+      'Une, intercala, reordena, selecciona, rota, duplica y numera páginas PDF desde una herramienta privada, sin subir archivos.',
+    badge: 'Todo en uno · Procesamiento local · Vista previa',
     h1: 'Multiherramienta PDF',
-    lead:
-      'Una sola pantalla para las operaciones más importantes: unir varios PDF, mover páginas, eliminar páginas, rotarlas, extraer una selección y añadir texto visual antes de descargar una copia nueva.',
+    lead: 'Organiza e intercala varios PDF en una sola pantalla, aplica cambios por página o por selección y revisa el resultado antes de descargarlo.',
     steps: [
-      { text: 'Sube uno o varios PDFs. La herramienta los carga y prepara sus páginas localmente en tu navegador.' },
-      { text: 'Arrastra las miniaturas para cambiar el orden, usa los iconos para rotar o eliminar páginas, y deja seleccionadas las que quieras exportar.' },
-      { text: 'Elige si descargar todo o solo la selección, añade texto si lo necesitas y genera el nuevo PDF.' },
+      {
+        text: 'Añade uno o varios PDF. Las miniaturas se preparan localmente en tu navegador.',
+      },
+      {
+        text: 'Intercala dos PDF, reordena, selecciona por rango, gira, duplica o elimina páginas. También puedes deshacer cambios.',
+      },
+      {
+        text: 'Personaliza el nombre, añade texto o numeración opcional y genera una copia nueva con vista previa.',
+      },
     ],
     infoBlocks: [
-      { title: 'Una herramienta central sin subir tus archivos', text: 'La multiherramienta trabaja con pdf-lib y pdf.js en el navegador. Los documentos no se envían a un servidor y el PDF generado se crea localmente en tu dispositivo.' },
-      { title: 'Primera versión funcional y ampliable', text: 'Esta versión cubre unir, reordenar con drag and drop, rotar, eliminar, dividir por selección y añadir texto visible. Funciones más avanzadas se gestionan como módulos específicos cuando son fiables en frontend.' },
+      {
+        title: 'Tus documentos no se envían a un servidor',
+        text: 'La multiherramienta trabaja con pdf-lib y pdf.js en el navegador. El PDF final se crea localmente en tu dispositivo.',
+      },
+      {
+        title: 'Control preciso también en móvil',
+        text: 'Puedes mover páginas con botones, usar selecciones rápidas o rangos, aplicar acciones en lote y restaurar páginas eliminadas sin depender del arrastre.',
+      },
     ],
     footer: 'Tus archivos se procesan localmente en tu navegador.',
   },
   en: {
     title: 'Free private online PDF multitool',
     description:
-      'Edit PDFs from one tool: merge, reorder, rotate, delete, split by selection and add visible text without uploads.',
-    badge: 'Main tool · All in one · 100% browser-based',
+      'Merge, interleave, reorder, select, rotate, duplicate and number PDF pages in one private tool without uploading files.',
+    badge: 'All in one · Local processing · Preview',
     h1: 'PDF multitool',
-    lead:
-      'One screen for the most important operations: merge PDFs, move pages, delete pages, rotate them, extract a selection and add visible text before downloading a new copy.',
+    lead: 'Organize and interleave several PDFs on one screen, apply changes per page or to a selection, and review the result before downloading.',
     steps: [
-      { text: 'Upload one or more PDFs. The tool loads and prepares their pages locally in your browser.' },
-      { text: 'Drag thumbnails to reorder, use icons to rotate or delete pages, and keep selected the pages you want to export.' },
-      { text: 'Choose whether to download everything or only the selection, add text if needed and generate the new PDF.' },
+      {
+        text: 'Add one or more PDFs. Thumbnails are prepared locally in your browser.',
+      },
+      {
+        text: 'Interleave two PDFs, reorder, select by range, rotate, duplicate or delete pages. You can also undo changes.',
+      },
+      {
+        text: 'Customize the filename, add optional text or page numbers, and create a new copy with a preview.',
+      },
     ],
     infoBlocks: [
-      { title: 'A central tool without uploading your files', text: 'The multitool works with pdf-lib and pdf.js in the browser. Documents are not sent to a server and the generated PDF is created locally on your device.' },
-      { title: 'Functional and extensible first version', text: 'This version covers merge, drag and drop reorder, rotate, delete, split by selection and visible text insertion. More advanced features are handled as specific modules when reliable on the frontend.' },
+      {
+        title: 'Your documents are not sent to a server',
+        text: 'The multitool uses pdf-lib and pdf.js in the browser. The final PDF is created locally on your device.',
+      },
+      {
+        title: 'Precise control on mobile too',
+        text: 'Move pages with buttons, use quick selections or ranges, apply bulk actions and restore deleted pages without relying on drag and drop.',
+      },
     ],
     footer: 'Your files are processed locally in your browser.',
   },
@@ -74,252 +96,3 @@ const pageCopy = copy[currentLang];
 >
   <MultiPdfToolImproved client:load lang={currentLang} />
 </ToolPageLayout>
-
-<script is:inline>
-  (() => {
-    const labels = document.documentElement.lang === 'en'
-      ? { zoom: 'Zoom', out: 'Zoom out', in: 'Zoom in', reset: 'Reset zoom' }
-      : { zoom: 'Zoom', out: 'Alejar', in: 'Acercar', reset: 'Restablecer zoom' };
-
-    let zoom = 1;
-    let controlsFor = null;
-
-    function applyZoom(modal) {
-      const image = modal?.querySelector('.thumb-modal__body img');
-      const value = modal?.querySelector('.thumb-modal__zoom-value');
-      const range = modal?.querySelector('.thumb-modal__zoom-range');
-
-      if (image) {
-        const currentTransform = image.style.transform || '';
-        const rotation = currentTransform.match(/rotate\([^)]*\)/)?.[0] || '';
-        image.style.transform = `${rotation} scale(${zoom})`.trim();
-      }
-      if (value) value.textContent = `${Math.round(zoom * 100)}%`;
-      if (range) range.value = String(zoom);
-    }
-
-    function setZoom(modal, nextZoom) {
-      zoom = Math.min(4, Math.max(0.5, Number(nextZoom) || 1));
-      applyZoom(modal);
-    }
-
-    function enhanceModal() {
-      const modal = document.querySelector('.thumb-modal');
-      if (!modal || modal === controlsFor) return;
-
-      controlsFor = modal;
-      zoom = 1;
-
-      const header = modal.querySelector('.thumb-modal__panel header');
-      const closeButton = header?.querySelector('button[aria-label]');
-      const image = modal.querySelector('.thumb-modal__body img');
-      if (!header || !image || modal.querySelector('.thumb-modal__zoom-controls')) return;
-
-      const controls = document.createElement('div');
-      controls.className = 'thumb-modal__zoom-controls';
-      controls.innerHTML = `
-        <button type="button" data-zoom="out" aria-label="${labels.out}">−</button>
-        <label>
-          <span>${labels.zoom}</span>
-          <input class="thumb-modal__zoom-range" type="range" min="0.5" max="4" step="0.25" value="1" />
-        </label>
-        <strong class="thumb-modal__zoom-value">100%</strong>
-        <button type="button" data-zoom="in" aria-label="${labels.in}">+</button>
-        <button type="button" data-zoom="reset" aria-label="${labels.reset}">100%</button>
-      `;
-
-      controls.addEventListener('click', (event) => {
-        const action = event.target?.closest?.('[data-zoom]')?.dataset?.zoom;
-        if (action === 'out') setZoom(modal, zoom - 0.25);
-        if (action === 'in') setZoom(modal, zoom + 0.25);
-        if (action === 'reset') setZoom(modal, 1);
-      });
-      controls.querySelector('input')?.addEventListener('input', (event) => setZoom(modal, event.target.value));
-
-      header.insertBefore(controls, closeButton || null);
-      applyZoom(modal);
-    }
-
-    document.addEventListener('click', (event) => {
-      if (event.target?.closest?.('.multi-page__zoom')) {
-        requestAnimationFrame(enhanceModal);
-      }
-    });
-
-    const observer = new MutationObserver(() => {
-      if (!document.querySelector('.thumb-modal')) {
-        controlsFor = null;
-        zoom = 1;
-        return;
-      }
-      requestAnimationFrame(enhanceModal);
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true });
-  })();
-</script>
-
-<style is:global>
-  .multi-page[draggable='true']:active {
-    z-index: 20;
-    opacity: 0.92;
-    transform: rotate(1.5deg) scale(1.035) !important;
-    border-color: var(--color-primary, #2563eb) !important;
-    box-shadow:
-      0 28px 70px rgb(15 23 42 / 0.32),
-      0 0 0 6px color-mix(in srgb, var(--color-primary, #2563eb) 18%, transparent) !important;
-  }
-
-  .multi-tool__pages:has(.multi-page--over) .multi-page:not(.multi-page--over) {
-    opacity: 0.48;
-    filter: saturate(0.75);
-    transform: scale(0.985);
-  }
-
-  .multi-tool__pages:has(.multi-page--over) .multi-page:hover:not(.multi-page--over) {
-    transform: scale(0.985);
-  }
-
-  .multi-page--over {
-    position: relative;
-    z-index: 15;
-    opacity: 1 !important;
-    filter: none !important;
-    transform: translateY(-8px) scale(1.045) !important;
-    border-color: var(--color-secondary, #7c3aed) !important;
-    box-shadow:
-      0 34px 90px rgb(124 58 237 / 0.34),
-      0 18px 45px rgb(15 23 42 / 0.22),
-      0 0 0 8px color-mix(in srgb, var(--color-secondary, #7c3aed) 25%, transparent) !important;
-  }
-
-  .multi-page--over::before {
-    content: '';
-    position: absolute;
-    inset: -14px;
-    z-index: -1;
-    border-radius: 32px;
-    background:
-      linear-gradient(135deg,
-        color-mix(in srgb, var(--color-secondary, #7c3aed) 20%, transparent),
-        color-mix(in srgb, var(--color-primary, #2563eb) 12%, transparent)
-      );
-    box-shadow:
-      inset 0 0 0 2px color-mix(in srgb, var(--color-secondary, #7c3aed) 42%, transparent),
-      0 0 0 999px rgb(15 23 42 / 0.02);
-  }
-
-  .multi-page--over::after {
-    content: 'Soltar aquí';
-    position: absolute;
-    left: 50%;
-    bottom: calc(100% + 0.55rem);
-    z-index: 5;
-    transform: translateX(-50%);
-    padding: 0.38rem 0.75rem;
-    border-radius: 999px;
-    background: var(--color-secondary, #7c3aed);
-    color: #fff;
-    font-size: 0.75rem;
-    font-weight: 950;
-    white-space: nowrap;
-    box-shadow: 0 14px 34px rgb(15 23 42 / 0.28);
-  }
-
-  html[lang='en'] .multi-page--over::after {
-    content: 'Drop here';
-  }
-
-  .thumb-modal {
-    padding: clamp(0.5rem, 1.5vw, 1.25rem) !important;
-  }
-
-  .thumb-modal__panel {
-    width: min(98vw, 110rem) !important;
-    height: min(96vh, 72rem) !important;
-    max-height: 96vh !important;
-    grid-template-rows: auto minmax(0, 1fr) !important;
-  }
-
-  .thumb-modal__panel header {
-    align-items: center !important;
-    flex-wrap: wrap !important;
-  }
-
-  .thumb-modal__zoom-controls {
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-    margin-left: auto;
-    padding: 0.35rem;
-    border: 1px solid var(--color-border, #e2e8f0);
-    border-radius: 999px;
-    background: var(--color-surface-soft, #f1f5f9);
-  }
-
-  .thumb-modal__zoom-controls button {
-    width: auto !important;
-    min-width: 2.35rem;
-    height: 2.35rem !important;
-    padding-inline: 0.7rem;
-    font-size: 0.95rem !important;
-  }
-
-  .thumb-modal__zoom-controls label {
-    display: flex;
-    align-items: center;
-    gap: 0.45rem;
-    color: var(--color-text-muted, #475569);
-    font-size: 0.85rem;
-    font-weight: 900;
-  }
-
-  .thumb-modal__zoom-range {
-    width: min(22vw, 13rem);
-    accent-color: var(--color-primary, #2563eb);
-  }
-
-  .thumb-modal__zoom-value {
-    min-width: 3.5rem;
-    color: var(--color-text, #0f172a);
-    font-size: 0.9rem;
-    text-align: center;
-  }
-
-  .thumb-modal__body {
-    align-items: start !important;
-    justify-items: center !important;
-    width: 100% !important;
-    min-height: 0 !important;
-    padding: 1rem;
-    border-radius: var(--radius-xl, 1.25rem);
-    background: color-mix(in srgb, var(--color-surface-soft, #f1f5f9) 72%, transparent);
-  }
-
-  .thumb-modal__body img {
-    width: min(92vw, 62rem) !important;
-    max-width: none !important;
-    max-height: none !important;
-    transform-origin: top center;
-    transition: transform 140ms ease;
-  }
-
-  @media (max-width: 700px) {
-    .thumb-modal__panel {
-      width: 100vw !important;
-      height: 100vh !important;
-      border-radius: 0 !important;
-    }
-
-    .thumb-modal__zoom-controls {
-      order: 3;
-      width: 100%;
-      justify-content: center;
-      border-radius: 1rem;
-    }
-
-    .thumb-modal__zoom-range {
-      width: 8rem;
-    }
-  }
-</style>

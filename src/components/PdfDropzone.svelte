@@ -14,6 +14,8 @@
   export let selectedLabel = '';
   export let acceptTransfers = true;
   export let showPrivacyLink = true;
+  export let compact = false;
+  export let lang: PdfToolLang | undefined = undefined;
   export let maxFileSize: number | undefined = undefined;
   export let maxTotalSize: number | undefined = undefined;
   export let maxFiles: number | undefined = undefined;
@@ -24,30 +26,30 @@
   let inputElement: HTMLInputElement;
   let isDragging = false;
   let dragDepth = 0;
-  let privacyHref = '/es/privacidad';
-  let privacyText = 'Tus archivos se procesan en este navegador. Ver privacidad';
-  let currentLang: PdfToolLang = 'es';
+  let currentLang: PdfToolLang = lang ?? 'es';
   const inputId = `pdf-dropzone-input-${Math.random().toString(36).slice(2)}`;
   const helpId = `pdf-dropzone-help-${Math.random().toString(36).slice(2)}`;
   const statusId = `pdf-dropzone-status-${Math.random().toString(36).slice(2)}`;
 
   $: currentTitle = isDragging ? activeTitle : title;
   $: statusText = selectedLabel || subtitle;
+  $: if (lang) currentLang = lang;
+  $: privacyHref = `/${currentLang}/privacidad`;
+  $: privacyText =
+    currentLang === 'en'
+      ? 'Files are processed in this browser. View privacy'
+      : 'Tus archivos se procesan en este navegador. Ver privacidad';
 
   onMount(() => {
-    currentLang = document.documentElement.lang === 'en' ? 'en' : 'es';
-    privacyHref = `/${currentLang}/privacidad`;
-    privacyText =
-      currentLang === 'en'
-        ? 'Files are processed in this browser. View privacy'
-        : 'Tus archivos se procesan en este navegador. Ver privacidad';
+    let cancelled = false;
+    if (!lang) currentLang = document.documentElement.lang === 'en' ? 'en' : 'es';
 
     if (!acceptTransfers) return;
 
     void (async () => {
       try {
         const transfer = await consumePendingPdfTransfer();
-        if (transfer?.file) {
+        if (!cancelled && transfer?.file) {
           selectedLabel =
             currentLang === 'en'
               ? `Imported from ${transfer.source}: ${transfer.file.name}`
@@ -58,6 +60,10 @@
         // Ignore transfer errors so the normal uploader keeps working.
       }
     })();
+
+    return () => {
+      cancelled = true;
+    };
   });
 
   function openFileDialog() {
@@ -99,28 +105,23 @@
     if (files.length === 0) return;
 
     const invalidFiles = files.filter((file) => !isPdf(file));
-    if (invalidFiles.length > 0) {
-      await onInvalidFiles(invalidFiles);
-    }
-
     const validation = validatePdfFiles(
       multiple ? files : files.slice(0, 1),
       { maxFileSize, maxTotalSize, maxFiles },
       currentLang,
     );
 
-    if (validation.errors.length > 0) {
-      await onValidationErrors(validation.errors);
+    if (validation.validFiles.length > 0) {
+      await onFiles(multiple ? validation.validFiles : [validation.validFiles[0]]);
     }
-
-    if (validation.validFiles.length === 0) return;
-    await onFiles(multiple ? validation.validFiles : [validation.validFiles[0]]);
+    if (invalidFiles.length > 0) await onInvalidFiles(invalidFiles);
+    if (validation.errors.length > 0) await onValidationErrors(validation.errors);
   }
 
   function isPdf(file: File) {
     const lowerName = file.name.toLowerCase();
     return (
-      acceptedTypes.includes(file.type) ||
+      acceptedTypes.some((type) => type === file.type) ||
       acceptedExtensions.some((extension) => lowerName.endsWith(extension))
     );
   }
@@ -131,6 +132,7 @@
     type="button"
     class:pdf-dropzone={true}
     class:pdf-dropzone--active={isDragging}
+    class:pdf-dropzone--compact={compact}
     aria-controls={inputId}
     aria-describedby={`${helpId} ${statusId}`}
     aria-label={`${currentTitle}. ${statusText}`}
@@ -154,7 +156,10 @@
   </button>
 
   {#if showPrivacyLink}
-    <p class="pdf-dropzone__privacy">🔒 <a href={privacyHref}>{privacyText}</a></p>
+    <p class="pdf-dropzone__privacy">
+      <span aria-hidden="true">🔒</span>
+      <a href={privacyHref}>{privacyText}</a>
+    </p>
   {/if}
 </div>
 
@@ -163,6 +168,7 @@
   bind:this={inputElement}
   class="pdf-dropzone__input"
   type="file"
+  hidden
   {accept}
   {multiple}
   tabindex="-1"
@@ -220,6 +226,38 @@
       radial-gradient(circle at center, rgba(239, 68, 68, 0.2), transparent 50%);
     box-shadow: 0 28px 80px rgba(239, 68, 68, 0.22);
     transform: scale(1.01);
+  }
+
+  .pdf-dropzone--compact {
+    grid-template-columns: auto minmax(0, 1fr);
+    min-height: 116px;
+    padding: 18px 22px;
+    text-align: left;
+  }
+
+  .pdf-dropzone--compact .pdf-dropzone__icon-stack {
+    width: 66px;
+    height: 58px;
+  }
+
+  .pdf-dropzone--compact .pdf-dropzone__icon-card {
+    width: 44px;
+    height: 52px;
+    border-radius: 12px;
+  }
+
+  .pdf-dropzone--compact .pdf-dropzone__icon-card--back {
+    left: 4px;
+    top: 2px;
+  }
+
+  .pdf-dropzone--compact .pdf-dropzone__icon-card--front {
+    right: 3px;
+    font-size: 1.45rem;
+  }
+
+  .pdf-dropzone--compact .pdf-dropzone__copy strong {
+    font-size: 1.05rem;
   }
 
   .pdf-dropzone__glow {
@@ -405,6 +443,17 @@
     .pdf-dropzone {
       min-height: 220px;
       border-radius: 22px;
+    }
+
+    .pdf-dropzone--compact {
+      grid-template-columns: auto minmax(0, 1fr);
+      min-height: 108px;
+      padding: 16px;
+    }
+
+    .pdf-dropzone--compact .pdf-dropzone__copy span {
+      max-width: 100%;
+      white-space: normal;
     }
   }
 </style>

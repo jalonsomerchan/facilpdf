@@ -271,8 +271,12 @@
   }
 
   .pdf-result-modal__button--primary {
-    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
-    color: #fff;
+    background: linear-gradient(
+      135deg,
+      var(--color-primary-filled, var(--color-primary)),
+      var(--color-secondary-filled, var(--color-secondary))
+    );
+    color: var(--color-on-filled, #fff);
     box-shadow: 0 16px 34px rgba(239, 68, 68, 0.28);
   }
 
@@ -283,7 +287,7 @@
 
   .pdf-result-modal__close:focus-visible,
   .pdf-result-modal__button:focus-visible {
-    outline: 3px solid var(--color-primary-soft);
+    outline: 3px solid var(--color-primary);
     outline-offset: 3px;
   }
 

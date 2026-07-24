@@ -15,6 +15,7 @@
     downloadName?: string;
     downloadLabel?: string;
     privacyText?: string;
+    eyebrow?: string;
     actions?: Action[];
   };
 
@@ -27,6 +28,7 @@
     downloadName = fileName,
     downloadLabel = 'Descargar PDF',
     privacyText = 'El archivo generado se mantiene en tu navegador. No se ha enviado a servidores externos.',
+    eyebrow = 'Proceso completado',
     actions = [],
   }: Props = $props();
 </script>
@@ -35,7 +37,7 @@
   <div class="result-state__icon" aria-hidden="true">✓</div>
 
   <div class="result-state__content">
-    <p class="result-state__eyebrow">Proceso completado</p>
+    <p class="result-state__eyebrow">{eyebrow}</p>
     <h2>{title}</h2>
     <p>{description}</p>
 
@@ -50,7 +52,9 @@
     </div>
 
     {#if downloadUrl}
-      <a class="result-state__download" href={downloadUrl} download={downloadName}>{downloadLabel}</a>
+      <a class="result-state__download" href={downloadUrl} download={downloadName}
+        >{downloadLabel}</a
+      >
     {:else}
       <button class="result-state__download" type="button" disabled>{downloadLabel}</button>
     {/if}
@@ -59,9 +63,16 @@
       <div class="result-state__actions">
         {#each actions as action}
           {#if action.href}
-            <a class={`result-state__action result-state__action--${action.variant ?? 'secondary'}`} href={action.href}>{action.label}</a>
+            <a
+              class={`result-state__action result-state__action--${action.variant ?? 'secondary'}`}
+              href={action.href}>{action.label}</a
+            >
           {:else}
-            <button class={`result-state__action result-state__action--${action.variant ?? 'secondary'}`} type="button" onclick={action.onClick}>{action.label}</button>
+            <button
+              class={`result-state__action result-state__action--${action.variant ?? 'secondary'}`}
+              type="button"
+              onclick={action.onClick}>{action.label}</button
+            >
           {/if}
         {/each}
       </div>
@@ -79,12 +90,17 @@
     width: min(48rem, 100%);
     margin-inline: auto;
     padding: clamp(1.25rem, 3vw, 2rem);
-    border: 1px solid color-mix(in srgb, var(--color-success, #16a34a) 28%, var(--color-border, #e2e8f0));
+    border: 1px solid
+      color-mix(in srgb, var(--color-success, #16a34a) 28%, var(--color-border, #e2e8f0));
     border-radius: var(--radius-2xl, 1.5rem);
     background:
-      radial-gradient(circle at top left, color-mix(in srgb, var(--color-success, #16a34a) 12%, transparent), transparent 18rem),
+      radial-gradient(
+        circle at top left,
+        color-mix(in srgb, var(--color-success, #16a34a) 12%, transparent),
+        transparent 18rem
+      ),
       var(--color-surface-raised, #fff);
-    box-shadow: var(--shadow-sm, 0 4px 12px rgb(15 23 42 / .08));
+    box-shadow: var(--shadow-sm, 0 4px 12px rgb(15 23 42 / 0.08));
   }
 
   .result-state__icon {
@@ -101,7 +117,7 @@
 
   .result-state__content {
     display: grid;
-    gap: .85rem;
+    gap: 0.85rem;
     min-width: 0;
   }
 
@@ -113,9 +129,9 @@
 
   .result-state__eyebrow {
     color: var(--color-success, #16a34a);
-    font-size: .78rem;
+    font-size: 0.78rem;
     font-weight: 900;
-    letter-spacing: .08em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
   }
 
@@ -132,9 +148,9 @@
   .result-state__file {
     display: flex;
     align-items: center;
-    gap: .8rem;
+    gap: 0.8rem;
     min-width: 0;
-    padding: .85rem;
+    padding: 0.85rem;
     border: 1px solid var(--color-border, #e2e8f0);
     border-radius: var(--radius-xl, 1.25rem);
     background: var(--color-surface, #fff);
@@ -152,7 +168,7 @@
 
   .result-state__file div {
     display: grid;
-    gap: .15rem;
+    gap: 0.15rem;
     min-width: 0;
   }
 
@@ -178,37 +194,41 @@
     justify-content: center;
     width: fit-content;
     min-height: 2.9rem;
-    padding: .78rem 1.15rem;
+    padding: 0.78rem 1.15rem;
     border: 1px solid transparent;
     border-radius: var(--radius-full, 999px);
     cursor: pointer;
     font-weight: 900;
     line-height: 1;
     text-decoration: none;
-    transition: transform var(--transition-fast, 120ms ease), background var(--transition-base, 180ms ease), border-color var(--transition-base, 180ms ease), box-shadow var(--transition-base, 180ms ease);
+    transition:
+      transform var(--transition-fast, 120ms ease),
+      background var(--transition-base, 180ms ease),
+      border-color var(--transition-base, 180ms ease),
+      box-shadow var(--transition-base, 180ms ease);
   }
 
   .result-state__download {
-    background: var(--color-primary, #2563eb);
-    color: #fff;
-    box-shadow: var(--shadow-sm, 0 4px 12px rgb(15 23 42 / .08));
+    background: var(--color-primary-filled, var(--color-primary, #2563eb));
+    color: var(--color-on-filled, #fff);
+    box-shadow: var(--shadow-sm, 0 4px 12px rgb(15 23 42 / 0.08));
   }
 
   .result-state__download:hover {
-    color: #fff;
+    color: var(--color-on-filled, #fff);
     transform: translateY(-1px);
-    background: var(--color-primary-hover, #1d4ed8);
+    background: var(--color-primary-filled-hover, var(--color-primary-hover, #1d4ed8));
   }
 
   .result-state__download:disabled {
     cursor: not-allowed;
-    opacity: .55;
+    opacity: 0.55;
   }
 
   .result-state__actions {
     display: flex;
     flex-wrap: wrap;
-    gap: .7rem;
+    gap: 0.7rem;
   }
 
   .result-state__action--secondary {
@@ -223,8 +243,8 @@
   }
 
   .result-state__action--primary {
-    background: var(--color-primary, #2563eb);
-    color: #fff;
+    background: var(--color-primary-filled, var(--color-primary, #2563eb));
+    color: var(--color-on-filled, #fff);
   }
 
   .result-state__action:hover {
@@ -232,11 +252,12 @@
   }
 
   .result-state__privacy {
-    padding: .75rem .9rem;
-    border: 1px solid color-mix(in srgb, var(--color-success, #16a34a) 24%, var(--color-border, #e2e8f0));
+    padding: 0.75rem 0.9rem;
+    border: 1px solid
+      color-mix(in srgb, var(--color-success, #16a34a) 24%, var(--color-border, #e2e8f0));
     border-radius: var(--radius-lg, 1rem);
     background: var(--color-success-soft, #dcfce7);
-    font-size: .92rem;
+    font-size: 0.92rem;
   }
 
   @media (max-width: 560px) {
